@@ -1,0 +1,29 @@
+{
+  "name": "webstudio-cli",
+  "version": "0.1.0",
+  "description": "Webstudio CLI",
+  "scripts": {
+    "build": "yarn clean && esbuild ./src/*  --outdir=./lib --platform=node",
+    "clean": "rm -fr ./lib"
+  },
+  "devDependencies": {
+    "esbuild": "^0.14.25"
+  },
+  "dependencies": {
+    "@types/node": "^17.0.21",
+    "fs-extra": "^10.0.1",
+    "inquirer": "^8.2.1",
+    "meow": "^10.1.2",
+    "node-fetch": "^3.2.2"
+  },
+  "homepage": "https://webstudio.is",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/webstudio-is/webstudio-cli"
+  },
+  "bin": {
+    "wstd": "./cli"
+  }
+}
