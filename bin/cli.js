@@ -1,4 +1,5 @@
-import { main } from "./lib/main.js";
+#!/usr/bin/env node
+import { main } from "../lib/main.js";
 
 main().then(
   () => {

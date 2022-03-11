@@ -7,10 +7,10 @@
     "clean": "rm -fr ./lib"
   },
   "devDependencies": {
+    "@types/node": "^17.0.21",
     "esbuild": "^0.14.25"
   },
   "dependencies": {
-    "@types/node": "^17.0.21",
     "fs-extra": "^10.0.1",
     "inquirer": "^8.2.1",
     "meow": "^10.1.2",
@@ -24,6 +24,6 @@
     "url": "https://github.com/webstudio-is/webstudio-cli"
   },
   "bin": {
-    "wstd": "./cli"
+    "wstd": "./bin/cli.js"
   }
 }
