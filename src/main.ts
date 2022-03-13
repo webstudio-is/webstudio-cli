@@ -1,4 +1,3 @@
-import inquirer from "inquirer";
 import meow from "meow";
 import "./fetch-polyfill.js";
 import { sync } from "./sync.js";
@@ -17,6 +16,8 @@ const help = `
 const commands = {
   sync,
 };
+
+type Command = keyof typeof commands;
 
 export const main = async () => {
   const { input, flags, showHelp, showVersion, pkg } = meow(help, {
@@ -37,5 +38,5 @@ export const main = async () => {
     showHelp();
   }
 
-  await commands[command](...args, flags);
+  await commands[command as Command](args[0], flags);
 };
