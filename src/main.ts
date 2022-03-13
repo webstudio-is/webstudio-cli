@@ -7,7 +7,7 @@ const help = `
   Usage:
     $ wstd <command> [flags...]
   Commands:
-    sync <projectId>      Fetch data over a Wesbstudio API
+    sync <project-id>      Fetch data over a Wesbstudio API
   Flags:
     --host,               Host e.g. http://localhost:3000
     --help, -h            Show this help message
@@ -23,6 +23,7 @@ export const main = async () => {
     flags: {
       help: { type: "boolean", default: false, alias: "h" },
       version: { type: "boolean", default: false, alias: "v" },
+      host: { type: "string" },
     },
     importMeta: import.meta,
   });
