@@ -17,6 +17,20 @@ const loadTree = async ({
   await fs.outputJson(filePath, json, { spaces: 2 });
 };
 
+const loadProps = async ({
+  host,
+  projectId,
+}: {
+  host: string;
+  projectId: string;
+}) => {
+  const url = `${host}/rest/props/${projectId}`;
+  const response = await fetch(url);
+  const json = await response.json();
+  const filePath = path.join(dir, "props.json");
+  await fs.outputJson(filePath, json, { spaces: 2 });
+};
+
 type Options = {
   host?: string;
 };
@@ -29,5 +43,10 @@ export const sync = async (projectId: string, options: Options) => {
     throw new Error("Host is required");
   }
 
-  await Promise.all([loadTree({ host: options.host, projectId })]);
+  await Promise.all([
+    loadTree({ host: options.host, projectId }),
+    loadProps({ host: options.host, projectId }),
+  ]);
+
+  console.log("Sync successful");
 };
