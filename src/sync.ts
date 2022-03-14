@@ -13,6 +13,7 @@ const loadTree = async ({
   const url = `${host}/rest/tree/${projectId}`;
   const response = await fetch(url);
   const json = await response.json();
+  if (json.errors) throw new Error(json.errors);
   const filePath = path.join(dir, "tree.json");
   await fs.outputJson(filePath, json, { spaces: 2 });
 };
@@ -27,6 +28,7 @@ const loadProps = async ({
   const url = `${host}/rest/props/${projectId}`;
   const response = await fetch(url);
   const json = await response.json();
+  if (json.errors) throw new Error(json.errors);
   const filePath = path.join(dir, "props.json");
   await fs.outputJson(filePath, json, { spaces: 2 });
 };
