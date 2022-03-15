@@ -33,6 +33,17 @@ const loadProps = async ({
   await fs.outputJson(filePath, json, { spaces: 2 });
 };
 
+const createIndex = async (files: Array<string>) => {
+  const content = [];
+  for (const fileName of files) {
+    content.push(
+      `export { default as ${fileName} } from "./${fileName}.json";`
+    );
+  }
+  const filePath = path.join(dir, "index.ts");
+  await fs.writeFile(filePath, content.join("\n"));
+};
+
 type Options = {
   host?: string;
 };
@@ -48,6 +59,7 @@ export const sync = async (projectId: string, options: Options) => {
   await Promise.all([
     loadTree({ host: options.host, projectId }),
     loadProps({ host: options.host, projectId }),
+    createIndex(["props", "tree"]),
   ]);
 
   console.log("Sync successful");
