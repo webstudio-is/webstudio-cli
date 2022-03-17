@@ -4,7 +4,7 @@ Webstudio CLI lets you download data from a Webstudio instance onto your file sy
 
 ## Installation
 
-Add CLI to your project locallt by running `yarn add --dev @webstudio-is/cli` or globally by running `yarn i -g @webstudio-is/cli`
+Add CLI to your project locally by running `yarn add --dev @webstudio-is/cli` or globally by running `npm i -g @webstudio-is/cli`
 
 Now you can run `wstd --help` to show the manual.
 
