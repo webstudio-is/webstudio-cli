@@ -33,6 +33,21 @@ const loadProps = async ({
   await fs.outputJson(filePath, json, { spaces: 2 });
 };
 
+const loadBreakpoints = async ({
+  host,
+  projectId,
+}: {
+  host: string;
+  projectId: string;
+}) => {
+  const url = `${host}/rest/breakpoints/${projectId}`;
+  const response = await fetch(url);
+  const json = await response.json();
+  if (json.errors) throw new Error(json.errors);
+  const filePath = path.join(dir, "breakpoints.json");
+  await fs.outputJson(filePath, json, { spaces: 2 });
+};
+
 const createIndex = async (files: Array<string>) => {
   const content = [];
   for (const fileName of files) {
@@ -59,7 +74,8 @@ export const sync = async (projectId: string, options: Options) => {
   await Promise.all([
     loadTree({ host: options.host, projectId }),
     loadProps({ host: options.host, projectId }),
-    createIndex(["props", "tree"]),
+    loadBreakpoints({ host: options.host, projectId }),
+    createIndex(["props", "tree", "breakpoints"]),
   ]);
 
   console.log("Sync successful");
