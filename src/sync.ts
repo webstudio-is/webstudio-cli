@@ -1,52 +1,8 @@
+import { loadProject } from "@webstudio-is/http-client";
 import fs from "fs-extra";
 import * as path from "path";
 
 const dir = path.join(process.cwd(), ".webstudio");
-
-const loadTree = async ({
-  host,
-  projectId,
-}: {
-  host: string;
-  projectId: string;
-}) => {
-  const url = `${host}/rest/tree/${projectId}`;
-  const response = await fetch(url);
-  const json = await response.json();
-  if (json.errors) throw new Error(json.errors);
-  const filePath = path.join(dir, "tree.json");
-  await fs.outputJson(filePath, json, { spaces: 2 });
-};
-
-const loadProps = async ({
-  host,
-  projectId,
-}: {
-  host: string;
-  projectId: string;
-}) => {
-  const url = `${host}/rest/props/${projectId}`;
-  const response = await fetch(url);
-  const json = await response.json();
-  if (json.errors) throw new Error(json.errors);
-  const filePath = path.join(dir, "props.json");
-  await fs.outputJson(filePath, json, { spaces: 2 });
-};
-
-const loadBreakpoints = async ({
-  host,
-  projectId,
-}: {
-  host: string;
-  projectId: string;
-}) => {
-  const url = `${host}/rest/breakpoints/${projectId}`;
-  const response = await fetch(url);
-  const json = await response.json();
-  if (json.errors) throw new Error(json.errors);
-  const filePath = path.join(dir, "breakpoints.json");
-  await fs.outputJson(filePath, json, { spaces: 2 });
-};
 
 const createIndex = async (files: Array<string>) => {
   const content = [];
@@ -71,12 +27,23 @@ export const sync = async (projectId: string, options: Options) => {
     throw new Error("Host is required");
   }
 
-  await Promise.all([
-    loadTree({ host: options.host, projectId }),
-    loadProps({ host: options.host, projectId }),
-    loadBreakpoints({ host: options.host, projectId }),
-    createIndex(["props", "tree", "breakpoints"]),
-  ]);
+  const data = await loadProject({
+    apiUrl: options.host,
+    projectId,
+  });
+
+  const writeToFilePromises = [];
+  const files = [];
+
+  for (const fileName in data) {
+    files.push(fileName);
+    const filePath = path.join(dir, `${fileName}.json`);
+    writeToFilePromises.push(
+      fs.outputJson(filePath, data[fileName], { spaces: 2 })
+    );
+  }
+
+  await Promise.all([...writeToFilePromises, createIndex(files)]);
 
   console.log("Sync successful");
 };
