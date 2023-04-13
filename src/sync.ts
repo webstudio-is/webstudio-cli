@@ -32,6 +32,8 @@ export const sync = async (projectId: string, options: Options) => {
     projectId,
   });
 
+  fs.mkdirSync(dir);
+
   const writeToFilePromises = [];
   const files = [];
 
