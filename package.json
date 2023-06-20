@@ -1,38 +1,25 @@
 {
-  "name": "@webstudio-is/cli",
-  "version": "0.3.0",
-  "description": "Webstudio CLI",
-  "author": "Webstudio <github@webstudio.is>",
-  "repository": "git@github.com:webstudio-is/webstudio-cli.git",
-  "homepage": "https://webstudio.is",
+  "name": "webstudio-cli-v2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.js",
   "scripts": {
-    "build": "yarn clean && esbuild ./src/*  --outdir=./lib --platform=node",
-    "clean": "rm -fr ./lib",
-    "typecheck": "tsc"
-  },
-  "devDependencies": {
-    "@types/fs-extra": "^9.0.13",
-    "@types/node": "^17.0.21",
-    "@types/node-fetch": "^2.6.1",
-    "esbuild": "^0.14.25",
-    "typescript": "^4.6.2"
-  },
-  "dependencies": {
-    "@webstudio-is/http-client": "^0.54.0",
-    "fs-extra": "^10.0.1",
-    "inquirer": "^8.2.1",
-    "meow": "^10.1.2",
-    "node-fetch": "^3.2.2"
+    "dev": "pnpm build --watch",
+    "build": "pnpm clean && esbuild ./src/*  --outdir=./lib --platform=node",
+    "clean": "rm -fr ./lib"
   },
   "type": "module",
   "bin": {
     "wstd": "./bin/cli.js"
   },
-  "files": [
-    "README.md",
-    "lib/*",
-    "bin/*",
-    "!*.test.*"
-  ],
-  "license": "MIT"
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^20.3.1",
+    "esbuild": "^0.18.5"
+  },
+  "dependencies": {
+    "xdg-app-paths": "^8.3.0"
+  }
 }
