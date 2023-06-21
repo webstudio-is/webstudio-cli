@@ -20,6 +20,12 @@
     "esbuild": "^0.18.5"
   },
   "dependencies": {
+    "@webstudio-is/asset-uploader": "^0.75.0",
+    "@webstudio-is/project-build": "^0.75.0",
+    "@webstudio-is/react-sdk": "^0.75.0",
+    "@webstudio-is/sdk-components-react": "^0.75.0",
+    "@webstudio-is/sdk-components-react-remix": "^0.75.0",
+    "tsx": "^3.12.7",
     "xdg-app-paths": "^8.3.0"
   }
 }

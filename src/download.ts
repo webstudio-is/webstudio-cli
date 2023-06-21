@@ -1,8 +1,8 @@
-import { CONFIG_FILE, BUILD_DIR, getConfig } from './lib.js';
+import { BUILD_DIR, getConfig } from './lib.js';
 import fs from 'fs/promises'
 
 export const download = async (buildId: string) => {
-    const rawData = `${BUILD_DIR}/${buildId}.json`
+    const rawData = `${BUILD_DIR}/sitedata.json`
     const config = await getConfig();
     const { url, token } = config;
     const webstudioUrl = new URL(url);

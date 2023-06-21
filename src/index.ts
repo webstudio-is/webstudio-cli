@@ -2,6 +2,7 @@ import { parseArgs } from "node:util";
 import { checkAuth, checkConfig, prepare } from "./lib.js";
 import login from "./login.js";
 import download from "./download.js";
+import prebuild from "./prebuild.js";
 
 export const main = async () => {
     await prepare();
@@ -19,6 +20,10 @@ export const main = async () => {
             download: {
                 type: "boolean",
                 short: "d",
+            },
+            build: {
+                type: "boolean",
+                short: "b",
             }
         },
         allowPositionals: true,
@@ -34,5 +39,8 @@ export const main = async () => {
         const buildId = args.positionals[0];
         await checkAuth(args.values.url);
         return await download(buildId);
+    }
+    if (args.values.build) {
+        console.log('Run: pnpm tsx src/prebuild.ts');
     }
 };

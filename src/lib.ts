@@ -4,12 +4,14 @@ import fs from 'fs/promises'
 import login from './login.js';
 import { Config } from './types.js';
 
-export const BUILD_DIR = 'builds';
+export const BUILD_DIR = 'app';
 export const CONFIG_PATH = xdgAppPaths("webstudio").config();
 export const CONFIG_FILE = path.join(CONFIG_PATH, "config.json");
 
 export const prepare = async () => {
     await fs.mkdir(BUILD_DIR, { recursive: true });
+    await fs.mkdir(`${BUILD_DIR}/template/__generated__`, { recursive: true });
+    await fs.mkdir(`${BUILD_DIR}/template/routes`, { recursive: true });
     await fs.mkdir(CONFIG_PATH, { recursive: true });
     await checkConfig();
 }
