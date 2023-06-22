@@ -1,7 +1,8 @@
-import { BUILD_DIR, getConfig } from './lib.js';
+import { BUILD_DIR, getConfig, prepareBuildDir } from './lib.js';
 import fs from 'fs/promises'
 
 export const download = async (buildId: string) => {
+    await prepareBuildDir();
     const rawData = `${BUILD_DIR}/sitedata.json`
     const config = await getConfig();
     const { url, token } = config;

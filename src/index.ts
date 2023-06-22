@@ -1,11 +1,13 @@
+import 'zx/globals';
 import { parseArgs } from "node:util";
-import { checkAuth, checkConfig, prepare } from "./lib.js";
+import { BUILD_DIR, checkAuth, prepareBuildDir, prepareConfigPath, prepareDefaultRemixConfig } from "./lib.js";
 import login from "./login.js";
 import download from "./download.js";
-import prebuild from "./prebuild.js";
+// import { prebuild } from "./prebuild.js";
+// import prebuild from "./prebuild.js";
 
 export const main = async () => {
-    await prepare();
+    await prepareConfigPath();
     const args = parseArgs({
         options: {
             login: {
@@ -24,6 +26,10 @@ export const main = async () => {
             build: {
                 type: "boolean",
                 short: "b",
+            },
+            serve: {
+                type: "boolean",
+                short: "s",
             }
         },
         allowPositionals: true,
@@ -38,9 +44,15 @@ export const main = async () => {
         }
         const buildId = args.positionals[0];
         await checkAuth(args.values.url);
-        return await download(buildId);
+        await download(buildId);
     }
     if (args.values.build) {
-        console.log('Run: pnpm tsx src/prebuild.ts');
+        await prepareBuildDir();
+        await prepareDefaultRemixConfig();
+        await $`pnpm tsx src/prebuild.ts`
+        await $`cd ${BUILD_DIR} && pnpm install && pnpm run build`
+    }
+    if (args.values.serve) {
+        await $`cd ${BUILD_DIR} && pnpm run start`
     }
 };

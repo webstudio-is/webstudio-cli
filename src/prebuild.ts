@@ -9,9 +9,10 @@ import type { Data } from "@webstudio-is/react-sdk";
 import type { Instance, Build, Page, Prop } from "@webstudio-is/project-build";
 import type { Params } from "@webstudio-is/react-sdk";
 import type { Asset } from "@webstudio-is/asset-uploader";
+import { BUILD_DIR } from "./lib";
 
-const baseDir = path.join(process.cwd(), "./app/");
-const jsonDir = path.join(process.cwd(), "./app/template");
+const baseDir = path.join(process.cwd(), `./${BUILD_DIR}/`);
+const jsonDir = path.join(process.cwd(), `./${BUILD_DIR}/app`);
 
 const siteDataString = fs.readFileSync(
     path.join(baseDir, "sitedata.json"),
@@ -215,7 +216,7 @@ for (const [pathName, pageComponents] of Object.entries(componentsByPage)) {
         );
 
         fs.writeFileSync(
-            path.join(routesDir, `${pathName}.tsx`),
+            path.join(routesDir, `_${pathName}.tsx`),
             routeFile,
             "utf8"
         );

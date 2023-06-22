@@ -1,3 +1,4 @@
+import 'zx/globals';
 import xdgAppPaths from "xdg-app-paths";
 import path from "node:path";
 import fs from 'fs/promises'
@@ -8,12 +9,21 @@ export const BUILD_DIR = 'app';
 export const CONFIG_PATH = xdgAppPaths("webstudio").config();
 export const CONFIG_FILE = path.join(CONFIG_PATH, "config.json");
 
-export const prepare = async () => {
-    await fs.mkdir(BUILD_DIR, { recursive: true });
-    await fs.mkdir(`${BUILD_DIR}/template/__generated__`, { recursive: true });
-    await fs.mkdir(`${BUILD_DIR}/template/routes`, { recursive: true });
+export const prepareConfigPath = async () => {
     await fs.mkdir(CONFIG_PATH, { recursive: true });
     await checkConfig();
+}
+export const prepareBuildDir = async () => {
+    await fs.mkdir(BUILD_DIR, { recursive: true });
+    await fs.mkdir(`${BUILD_DIR}/app/__generated__`, { recursive: true });
+    await fs.mkdir(`${BUILD_DIR}/app/routes`, { recursive: true });
+}
+
+export const prepareDefaultRemixConfig = async () => {
+    await $`cp ./templates/defaults/root.tsx ./${BUILD_DIR}/app`
+    await $`cp ./templates/remix-app-server/template.tsx ./${BUILD_DIR}`
+    await $`cp ./templates/remix-app-server/package.json ./${BUILD_DIR}`
+    await $`cp ./templates/remix-app-server/remix.config.js ./${BUILD_DIR}`
 }
 export const checkConfig = async () => {
     try {
