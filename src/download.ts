@@ -1,4 +1,4 @@
-import { BUILD_DIR, DEBUG, checkAuth, getConfig, prepareBuildDir } from './lib.js';
+import { BUILD_DIR, checkAuth } from './lib.js';
 import fs from 'fs/promises'
 
 export const download = async (projectId: string) => {
@@ -11,6 +11,7 @@ export const download = async (projectId: string) => {
     const webstudioUrl = new URL(host);
     webstudioUrl.pathname = `/rest/project/${projectId}`;
     webstudioUrl.searchParams.append('authToken', token);
+    console.log(`Downloading project ${projectId} from ${webstudioUrl.origin}`)
     const response = await fetch(webstudioUrl.href, {
         method: 'GET',
     })

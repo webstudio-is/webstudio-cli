@@ -1,20 +1,20 @@
 {
-  "name": "webstudio-cli-v2",
-  "version": "1.0.0",
-  "description": "",
-  "main": "src/index.js",
+  "name": "@webstudio-is/cli",
+  "version": "0.4.0",
+  "description": "Webstudio CLI",
+  "author": "Webstudio <github@webstudio.is>",
+  "repository": "git@github.com:webstudio-is/webstudio-cli.git",
+  "homepage": "https://webstudio.is",
   "scripts": {
     "dev": "pnpm build --watch",
-    "build": "pnpm clean && esbuild ./src/*  --outdir=./lib --platform=node",
+    "build": "pnpm clean && esbuild ./src/* --outdir=./lib --platform=node",
     "clean": "rm -fr ./lib"
   },
   "type": "module",
   "bin": {
-    "wstd": "./bin/cli.js"
+    "webstudio": "./bin/cli.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "@types/node": "^20.3.1",
     "esbuild": "^0.18.5"

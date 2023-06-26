@@ -30,7 +30,7 @@ export const login = async () => {
         };
         await fs.writeFile(CONFIG_FILE, JSON.stringify(newConfig, null, 2));
         rl.close();
-        console.log(`\nSaved config for project ${projectId}.`);
+        console.log(`Saved credentials for project ${projectId}.`);
         return
     } catch (error) {
         console.error('Invalid share link.');

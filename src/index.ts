@@ -1,15 +1,20 @@
 import 'zx/globals';
-
 import { parseArgs } from "node:util";
-import { DEBUG, BUILD_DIR, checkAuth, supportedBuildTypes, prepareBuildDir, prepareConfigPath, prepareDefaultRemixConfig } from "./lib.js";
+import { BUILD_DIR, supportedBuildTypes, prepareBuildDir, prepareConfigPath, prepareDefaultRemixConfig, HELP, VERSION } from "./lib.js";
+
 import login from "./login.js";
 import download from "./download.js";
 
-$.verbose = DEBUG;
 export const main = async () => {
-    await prepareConfigPath();
     const args = parseArgs({
         options: {
+            debug: {
+                type: "boolean",
+            },
+            version: {
+                type: "boolean",
+                short: "v",
+            },
             help: {
                 type: "boolean",
                 short: "h",
@@ -38,6 +43,18 @@ export const main = async () => {
         },
         allowPositionals: true,
     });
+    if (args.values.debug) {
+        $.verbose = true;
+    } else {
+        $.verbose = false;
+    }
+    if (args.values.help) {
+        return console.log(HELP);
+    }
+    if (args.values.version) {
+        return console.log(VERSION);
+    }
+    await prepareConfigPath();
     if (args.values.type) {
         if (!supportedBuildTypes.includes(args.values.type)) {
             console.error(`Unsupported build type: ${args.values.type}`);
@@ -46,10 +63,7 @@ export const main = async () => {
             return;
         }
     }
-    if (args.values.help) {
-        console.log(`Help will be here`);
-        return;
-    }
+
     if (args.values.login) {
         return await login();
     }
@@ -74,5 +88,8 @@ export const main = async () => {
         } else {
             await $`cd ${BUILD_DIR} && pnpm run start`
         }
+    }
+    if (!args.values.download && !args.values.build && !args.values.login && !args.values.serve) {
+        console.log(HELP);
     }
 };

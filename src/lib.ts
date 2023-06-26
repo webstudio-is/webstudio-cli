@@ -6,13 +6,28 @@ import { Auth, Config } from './types.js';
 import { deepmerge } from "deepmerge-ts";
 import login from './login.js';
 
+export const VERSION = 'v0.4.0';
 let currentTries = 0;
 export const MAX_TRIES = 3;
 export const BUILD_DIR = 'app';
 export const CONFIG_PATH = xdgAppPaths("webstudio").config();
 export const CONFIG_FILE = path.join(CONFIG_PATH, "config.json");
-export const DEBUG = true;
 export const supportedBuildTypes = ['remix-app-server', 'express', 'architect', 'flyio', 'netlify', 'vercel', 'cloudflare-pages', 'cloudflare-workers', 'deno'];
+
+export const HELP = `Usage:
+    $ webstudio [flags...]
+  Flags:
+    --login, -l           Login to Webstudio with shared link
+    --download, -d <project-id>        Download a project site data
+    --build, -b           Build a site
+    --type, -t            The type of build to create (default: remix-app-server) 
+                          (options: ${supportedBuildTypes.join(', ')})
+    --serve, -s           Serve a site locally
+
+    --debug               Enable debug mode
+    --help, -h            Show this help message
+    --version, -v         Show the version of this script
+`;
 
 export const prepareConfigPath = async () => {
     await $`mkdir -p ${CONFIG_PATH}`
@@ -88,6 +103,7 @@ export const checkConfig = async () => {
     }
 }
 export const checkAuth = async (projectId: string): Promise<Auth> => {
+    console.log(`Checking credentials for project ${projectId}`)
     if (currentTries >= MAX_TRIES) {
         throw new Error('Too many tries, please login again.');
     }
