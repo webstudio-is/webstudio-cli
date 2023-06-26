@@ -1,4 +1,7 @@
 export type Config = {
-    url: string;
-    token: string;
+    [projectId: string]: Auth
 }
+export type Auth = {
+    token: string,
+    host: string,
+} | null

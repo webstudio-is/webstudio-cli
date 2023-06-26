@@ -2,28 +2,83 @@ import 'zx/globals';
 import xdgAppPaths from "xdg-app-paths";
 import path from "node:path";
 import fs from 'fs/promises'
+import { Auth, Config } from './types.js';
+import { deepmerge } from "deepmerge-ts";
 import login from './login.js';
-import { Config } from './types.js';
 
+let currentTries = 0;
+export const MAX_TRIES = 3;
 export const BUILD_DIR = 'app';
 export const CONFIG_PATH = xdgAppPaths("webstudio").config();
 export const CONFIG_FILE = path.join(CONFIG_PATH, "config.json");
+export const DEBUG = true;
+export const supportedBuildTypes = ['remix-app-server', 'express', 'architect', 'flyio', 'netlify', 'vercel', 'cloudflare-pages', 'cloudflare-workers', 'deno'];
 
 export const prepareConfigPath = async () => {
-    await fs.mkdir(CONFIG_PATH, { recursive: true });
+    await $`mkdir -p ${CONFIG_PATH}`
     await checkConfig();
 }
 export const prepareBuildDir = async () => {
-    await fs.mkdir(BUILD_DIR, { recursive: true });
-    await fs.mkdir(`${BUILD_DIR}/app/__generated__`, { recursive: true });
-    await fs.mkdir(`${BUILD_DIR}/app/routes`, { recursive: true });
+    await $`rm -rf ${BUILD_DIR}`;
+    await $`mkdir -p ${BUILD_DIR}/app/__generated__`;
+    await $`mkdir -p ${BUILD_DIR}/app/routes`;
 }
 
-export const prepareDefaultRemixConfig = async () => {
+export const prepareDefaultRemixConfig = async (type: string) => {
     await $`cp ./templates/defaults/root.tsx ./${BUILD_DIR}/app`
-    await $`cp ./templates/remix-app-server/template.tsx ./${BUILD_DIR}`
-    await $`cp ./templates/remix-app-server/package.json ./${BUILD_DIR}`
-    await $`cp ./templates/remix-app-server/remix.config.js ./${BUILD_DIR}`
+    const def = await fs.readFile('./templates/defaults/package.json', 'utf-8');
+    const defaultJson = JSON.parse(def);
+    const template = await fs.readFile(`./templates/${type}/package.json`, 'utf-8');
+    const templateJson = JSON.parse(template);
+    const merged = deepmerge(defaultJson, templateJson);
+    await fs.writeFile(`./${BUILD_DIR}/package.json`, JSON.stringify(merged, null, 2));
+
+    await $`cp ./templates/defaults/template.tsx ./${BUILD_DIR}`
+    await $`cp ./templates/defaults/remix.config.js ./${BUILD_DIR}`
+
+    switch (type) {
+        case 'express':
+            await $`cp ./templates/${type}/server.js ./${BUILD_DIR}`
+            break;
+        case 'architect':
+            await $`cp ./templates/${type}/server.ts ./${BUILD_DIR}`
+            await $`cp -Pr ./templates/${type}/server/ ./${BUILD_DIR}`
+            await $`cp -Pr ./templates/${type}/app.arc ./${BUILD_DIR}`
+            break;
+        case 'flyio':
+            await $`cp ./templates/${type}/remix.config.js ./${BUILD_DIR}`
+            break;
+        case 'netlify':
+            await $`cp ./templates/${type}/remix.config.js ./${BUILD_DIR}`
+            await $`cp ./templates/${type}/server.ts ./${BUILD_DIR}`
+            await $`cp ./templates/${type}/netlify.toml ./${BUILD_DIR}`
+            break;
+        case 'vercel':
+            await $`cp ./templates/${type}/remix.config.js ./${BUILD_DIR}`
+            await $`cp ./templates/${type}/server.ts ./${BUILD_DIR}`
+            break;
+        case 'cloudflare-pages':
+            await $`cp ./templates/${type}/remix.config.js ./${BUILD_DIR}`
+            await $`cp ./templates/${type}/server.ts ./${BUILD_DIR}`
+            await $`cp ./templates/${type}/wrangler.toml ./${BUILD_DIR}`
+            await $`cp ./templates/${type}/.node-version ./${BUILD_DIR}`
+            await $`cp ./templates/${type}/template.tsx ./${BUILD_DIR}`
+            await $`cp -Pr ./templates/${type}/public ./${BUILD_DIR}/public`
+            break;
+        case 'cloudflare-workers':
+            await $`cp ./templates/${type}/remix.config.js ./${BUILD_DIR}`
+            await $`cp ./templates/${type}/server.ts ./${BUILD_DIR}`
+            await $`cp ./templates/${type}/wrangler.toml ./${BUILD_DIR}`
+            await $`cp ./templates/${type}/template.tsx ./${BUILD_DIR}`
+            break;
+        case 'deno':
+            await $`cp ./templates/${type}/remix.config.js ./${BUILD_DIR}`
+            await $`cp ./templates/${type}/server.ts ./${BUILD_DIR}`
+            await $`cp ./templates/${type}/deno.json ./${BUILD_DIR}`
+            await $`cp ./templates/${type}/template.tsx ./${BUILD_DIR}`
+            await $`cp -Pr ./templates/${type}/.vscode ./${BUILD_DIR}`
+    }
+
 }
 export const checkConfig = async () => {
     try {
@@ -32,12 +87,19 @@ export const checkConfig = async () => {
         fs.writeFile(CONFIG_FILE, JSON.stringify({}));
     }
 }
-export const checkAuth = async (url: string | undefined) => {
-    const config: Config = await getConfig();
-    if (!config || !config.url || config.url !== url || !config.token) {
-        console.error('Token not found. Logging in.');
-        await login(url);
+export const checkAuth = async (projectId: string): Promise<Auth> => {
+    if (currentTries >= MAX_TRIES) {
+        throw new Error('Too many tries, please login again.');
     }
+    let config: Config = await getConfig();
+    let found: Auth = config[projectId];
+    if (!found) {
+        console.log(`\nCredentials not found for project ${projectId}\n`)
+        await login();
+        currentTries++;
+        return await checkAuth(projectId);
+    }
+    return found;
 }
 
 export const getConfig = async () => {
