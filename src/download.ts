@@ -9,7 +9,7 @@ export const download = async (projectId: string) => {
     }
     const { token, host } = config;
     const webstudioUrl = new URL(host);
-    webstudioUrl.pathname = `/rest/project/${projectId}`;
+    webstudioUrl.pathname = `/rest/buildId/${projectId}`;
     webstudioUrl.searchParams.append('authToken', token);
 
     console.log(`Getting latest buildId for project ${projectId} from ${webstudioUrl.origin}`)
