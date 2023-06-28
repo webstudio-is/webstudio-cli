@@ -127,3 +127,21 @@ export const getConfig = async () => {
         return null;
     }
 }
+export const fetchApi = async (url: string) => {
+    const response = await fetch(url, {
+        method: 'GET',
+    })
+    const data = await response.json();
+    if (!response.ok) {
+        if (response.status === 400 || response.status === 401 || response.status === 500) {
+            if (data) {
+                console.error(data);
+                throw new Error(data);
+            } else {
+                console.error('Internal server error');
+                throw new Error('Internal server error');
+            }
+        }
+    }
+    return data;
+}

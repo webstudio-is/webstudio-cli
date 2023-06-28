@@ -1,4 +1,4 @@
-import { BUILD_DIR, checkAuth } from './lib.js';
+import { BUILD_DIR, checkAuth, fetchApi } from './lib.js';
 import fs from 'fs/promises'
 
 export const download = async (projectId: string) => {
@@ -11,25 +11,21 @@ export const download = async (projectId: string) => {
     const webstudioUrl = new URL(host);
     webstudioUrl.pathname = `/rest/project/${projectId}`;
     webstudioUrl.searchParams.append('authToken', token);
-    console.log(`Downloading project ${projectId} from ${webstudioUrl.origin}`)
-    const response = await fetch(webstudioUrl.href, {
-        method: 'GET',
-    })
-    const data = await response.text();
-    if (!response.ok) {
-        if (response.status === 400 || response.status === 401 || response.status === 500) {
-            if (data) {
-                console.error(data);
-                throw new Error(data);
-            } else {
-                console.error('Internal server error');
-                throw new Error('Internal server error');
-            }
-        }
-        return;
+
+    console.log(`Getting latest buildId for project ${projectId} from ${webstudioUrl.origin}`)
+    const buildIdData = await fetchApi(webstudioUrl.href);
+    const { buildId } = buildIdData;
+    if (!buildId) {
+        console.error('Project does not published yet');
+        throw new Error('Project does not published yet');
     }
-    await fs.writeFile(rawData, data);
+
+    webstudioUrl.pathname = `/rest/build/${buildId}`;
+    console.log(`Downloading project ${projectId} from ${webstudioUrl.origin}`)
+    const projectData = await fetchApi(webstudioUrl.href);
+    await fs.writeFile(rawData, JSON.stringify(projectData));
+
     console.log(`Project ${projectId} downloaded to ${rawData}`);
-    return
+    return;
 };
 export default download;
