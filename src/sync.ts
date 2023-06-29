@@ -1,7 +1,7 @@
 import { BUILD_DIR, checkAuth, fetchApi, prepareBuildDir } from './lib.js';
 import fs from 'fs/promises'
 
-export const download = async (args) => {
+export const sync = async (args) => {
     const projectId = args.positionals[1];
     if (!projectId) {
         throw new Error('No projectId specified.')
@@ -32,4 +32,4 @@ export const download = async (args) => {
     console.log(`Project ${projectId} downloaded to ${rawData}`);
     return;
 };
-export default download;
+export default sync;

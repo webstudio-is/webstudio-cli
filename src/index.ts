@@ -3,12 +3,12 @@ import { parseArgs } from "node:util";
 import { VERSION, prepareConfigPath, showHelp, supportedBuildTypes } from "./lib.js";
 
 import login from "./login.js";
-import download from "./download.js";
+import sync from "./sync.js";
 import build from "./build.js";
 import serve from "./serve.js";
 
 const commands = {
-    download,
+    sync,
     login,
     build,
     serve
@@ -19,6 +19,9 @@ type Command = keyof typeof commands;
 export const main = async () => {
     const args = parseArgs({
         options: {
+            download: {
+                type: "boolean",
+            },
             debug: {
                 type: "boolean",
                 short: "d",

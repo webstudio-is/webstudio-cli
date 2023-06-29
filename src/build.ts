@@ -1,11 +1,11 @@
-import download from "./download.js";
+import sync from "./sync.js";
 import { BUILD_DIR, checkSiteData, prepareDefaultRemixConfig } from "./lib.js";
 
 export const build = async (args) => {
     const projectId = args.positionals[1];
     let exitCode = await checkSiteData(args);
     if (exitCode !== 0) {
-        await download(args);
+        await sync(args);
         exitCode = await checkSiteData(args);
         if (exitCode !== 0) {
             throw new Error('Cannot build project')

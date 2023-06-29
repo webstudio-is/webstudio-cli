@@ -6,8 +6,10 @@ import { Auth, Config } from './types.js';
 import { deepmerge } from "deepmerge-ts";
 import login from './login.js';
 import packageJson from '../package.json' assert { type: "json" };
-export const VERSION = packageJson.version;
+
 let currentTries = 0;
+
+export const VERSION = packageJson.version;
 export const MAX_TRIES = 3;
 export const BUILD_DIR = 'app';
 export const CONFIG_PATH = xdgAppPaths("webstudio").config();
@@ -18,7 +20,7 @@ const HELP = `Usage:
     $ webstudio commands [flags...]
   Commands:
     login <shared link>             Login to Webstudio with shared link
-    download <projectId>            Download a project's site data
+    sync <projectId>                Download a project's site data
     build [projectId]               Build a site (default: use pre-downloaded data at './app/<projectId>.json')
     serve                           Serve a site locally
   Flags:
