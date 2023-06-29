@@ -1,8 +1,13 @@
-import { BUILD_DIR, checkAuth, fetchApi } from './lib.js';
+import { BUILD_DIR, checkAuth, fetchApi, prepareBuildDir } from './lib.js';
 import fs from 'fs/promises'
 
-export const download = async (projectId: string) => {
-    const rawData = `${BUILD_DIR}/sitedata.json`
+export const download = async (args) => {
+    const projectId = args.positionals[1];
+    if (!projectId) {
+        throw new Error('No projectId specified.')
+    }
+    await prepareBuildDir();
+    const rawData = `${BUILD_DIR}/${projectId}.json`
     const config = await checkAuth(projectId);
     if (!config) {
         throw new Error('Not logged in');
@@ -16,7 +21,6 @@ export const download = async (projectId: string) => {
     const buildIdData = await fetchApi(webstudioUrl.href);
     const { buildId } = buildIdData;
     if (!buildId) {
-        console.error('Project does not published yet');
         throw new Error('Project does not published yet');
     }
 

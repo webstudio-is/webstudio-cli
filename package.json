@@ -12,7 +12,7 @@
   },
   "type": "module",
   "bin": {
-    "webstudio": "./bin/cli.js"
+    "webstudio": "./bin/cli.sh"
   },
   "license": "MIT",
   "devDependencies": {

@@ -5,8 +5,8 @@ import fs from 'fs/promises'
 import { Auth, Config } from './types.js';
 import { deepmerge } from "deepmerge-ts";
 import login from './login.js';
-
-export const VERSION = 'v0.4.0';
+import packageJson from '../package.json' assert { type: "json" };
+export const VERSION = packageJson.version;
 let currentTries = 0;
 export const MAX_TRIES = 3;
 export const BUILD_DIR = 'app';
@@ -14,21 +14,23 @@ export const CONFIG_PATH = xdgAppPaths("webstudio").config();
 export const CONFIG_FILE = path.join(CONFIG_PATH, "config.json");
 export const supportedBuildTypes = ['remix-app-server', 'express', 'architect', 'flyio', 'netlify', 'vercel', 'cloudflare-pages', 'cloudflare-workers', 'deno'];
 
-export const HELP = `Usage:
-    $ webstudio [flags...]
+const HELP = `Usage:
+    $ webstudio commands [flags...]
+  Commands:
+    login <shared link>             Login to Webstudio with shared link
+    download <projectId>            Download a project's site data
+    build [projectId]               Build a site (default: use pre-downloaded data at './app/<projectId>.json')
+    serve                           Serve a site locally
   Flags:
-    --login, -l           Login to Webstudio with shared link
-    --download, -d <project-id>        Download a project site data
-    --build, -b           Build a site
-    --type, -t            The type of build to create (default: remix-app-server) 
-                          (options: ${supportedBuildTypes.join(', ')})
-    --serve, -s           Serve a site locally
-
-    --debug               Enable debug mode
-    --help, -h            Show this help message
-    --version, -v         Show the version of this script
+    --type, -t                      Build type chosen during build command (default: remix-app-server) 
+                                    (options: ${supportedBuildTypes.join(', ')})
+    --debug                         Enable debug mode
+    --help, -h                      Show this help message
+    --version, -v                   Show the version of this script
 `;
-
+export const showHelp = () => {
+    console.log(HELP);
+}
 export const prepareConfigPath = async () => {
     await $`mkdir -p ${CONFIG_PATH}`
     await checkConfig();
@@ -38,8 +40,13 @@ export const prepareBuildDir = async () => {
     await $`mkdir -p ${BUILD_DIR}/app/__generated__`;
     await $`mkdir -p ${BUILD_DIR}/app/routes`;
 }
+export const checkSiteData = async (args) => {
+    const projectId = args.positionals[1];
+    return await $`ls -1 app/${projectId}.json > /dev/null 2>&1`.exitCode;
+}
 
 export const prepareDefaultRemixConfig = async (type: string) => {
+    console.log(`Preparing default configurations for ${type}...`)
     await $`cp ./templates/defaults/root.tsx ./${BUILD_DIR}/app`
     const def = await fs.readFile('./templates/defaults/package.json', 'utf-8');
     const defaultJson = JSON.parse(def);
@@ -103,14 +110,13 @@ export const checkConfig = async () => {
     }
 }
 export const checkAuth = async (projectId: string): Promise<Auth> => {
-    console.log(`Checking credentials for project ${projectId}`)
     if (currentTries >= MAX_TRIES) {
         throw new Error('Too many tries, please login again.');
     }
     let config: Config = await getConfig();
     let found: Auth = config[projectId];
     if (!found) {
-        console.log(`\nCredentials not found for project ${projectId}\n`)
+        console.log(`Credentials not found for project ${projectId}\n`)
         await login();
         currentTries++;
         return await checkAuth(projectId);

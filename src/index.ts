@@ -1,15 +1,27 @@
 import 'zx/globals';
 import { parseArgs } from "node:util";
-import { BUILD_DIR, supportedBuildTypes, prepareBuildDir, prepareConfigPath, prepareDefaultRemixConfig, HELP, VERSION } from "./lib.js";
+import { VERSION, prepareConfigPath, showHelp, supportedBuildTypes } from "./lib.js";
 
 import login from "./login.js";
 import download from "./download.js";
+import build from "./build.js";
+import serve from "./serve.js";
+
+const commands = {
+    download,
+    login,
+    build,
+    serve
+};
+
+type Command = keyof typeof commands;
 
 export const main = async () => {
     const args = parseArgs({
         options: {
             debug: {
                 type: "boolean",
+                short: "d",
             },
             version: {
                 type: "boolean",
@@ -19,27 +31,11 @@ export const main = async () => {
                 type: "boolean",
                 short: "h",
             },
-            login: {
-                type: "boolean",
-                short: "l",
-            },
-            download: {
-                type: "boolean",
-                short: "d",
-            },
-            build: {
-                type: "boolean",
-                short: "b",
-            },
             type: {
                 type: "string",
                 short: "t",
                 default: "remix-app-server",
             },
-            serve: {
-                type: "boolean",
-                short: "s",
-            }
         },
         allowPositionals: true,
     });
@@ -48,48 +44,33 @@ export const main = async () => {
     } else {
         $.verbose = false;
     }
+
+    await prepareConfigPath();
+
     if (args.values.help) {
-        return console.log(HELP);
+        return showHelp()
     }
     if (args.values.version) {
         return console.log(VERSION);
     }
-    await prepareConfigPath();
-    if (args.values.type) {
-        if (!supportedBuildTypes.includes(args.values.type)) {
-            console.error(`Unsupported build type: ${args.values.type}`);
-            console.log(`Supported build types: ${supportedBuildTypes.join(', ')}`);
-            console.log(`Defaulting to remix-app-server`)
-            return;
-        }
+    if (args.positionals.length === 0) {
+        return showHelp()
+    }
+    if (args.values.type && supportedBuildTypes.includes(args.values.type) === false) {
+        console.error(`Invalid build type: ${args.values.type}`)
+        console.log(`Supported build types: ${supportedBuildTypes.join(', ')}`)
+        return
+    }
+    const command = args.positionals[0];
+    if (command in commands === false) {
+        return showHelp()
     }
 
-    if (args.values.login) {
-        return await login();
-    }
-    await prepareBuildDir();
-    if (args.values.download) {
-        if (args.positionals.length === 0) {
-            console.error('Please provide a project Id to download');
-            return;
-        }
-        const projectId = args.positionals[0];
-        await download(projectId);
-    }
-    if (args.values.build) {
-        // @ts-ignore
-        await prepareDefaultRemixConfig(args.values.type);
-        await $`pnpm tsx src/prebuild.ts`
-        await $`cd ${BUILD_DIR} && pnpm install && pnpm run build`
-    }
-    if (args.values.serve) {
-        if (args.values.type === 'vercel') {
-            console.error('Vercel builds cannot be served locally');
-        } else {
-            await $`cd ${BUILD_DIR} && pnpm run start`
-        }
-    }
-    if (!args.values.download && !args.values.build && !args.values.login && !args.values.serve) {
-        console.log(HELP);
+    try {
+        await commands[command as Command](args);
+    } catch (e) {
+        console.error(e);
+        showHelp();
+        return;
     }
 };

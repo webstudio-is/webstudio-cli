@@ -10,12 +10,13 @@ import type { Instance, Build, Page, Prop } from "@webstudio-is/project-build";
 import type { Params } from "@webstudio-is/react-sdk";
 import type { Asset } from "@webstudio-is/asset-uploader";
 import { BUILD_DIR } from "./lib";
+const projectId = process.argv.slice(2)[0] ?? 'sitedata';
 
 const baseDir = path.join(process.cwd(), `./${BUILD_DIR}/`);
 const jsonDir = path.join(process.cwd(), `./${BUILD_DIR}/app`);
 
 const siteDataString = fs.readFileSync(
-    path.join(baseDir, "sitedata.json"),
+    path.join(baseDir, `${projectId}.json`),
     "utf-8"
 );
 
