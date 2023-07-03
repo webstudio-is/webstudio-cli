@@ -17,7 +17,7 @@ export const sync = async (args) => {
     webstudioUrl.pathname = `/rest/buildId/${projectId}`;
     webstudioUrl.searchParams.append('authToken', token);
 
-    console.log(`Getting latest buildId for project ${projectId} from ${webstudioUrl.origin}`)
+    console.log(`Checking latest build for project ${projectId}.`)
     const buildIdData = await fetchApi(webstudioUrl.href);
     const { buildId } = buildIdData;
     if (!buildId) {
@@ -25,11 +25,12 @@ export const sync = async (args) => {
     }
 
     webstudioUrl.pathname = `/rest/build/${buildId}`;
-    console.log(`Downloading project ${projectId} from ${webstudioUrl.origin}`)
+    console.log(`Downloading project data.`)
     const projectData = await fetchApi(webstudioUrl.href);
     await fs.writeFile(rawData, JSON.stringify(projectData));
 
-    console.log(`Project ${projectId} downloaded to ${rawData}`);
+    console.log(`Project data downloaded to ${rawData}.`);
+    console.log(`\nTo build it, run \`webstudio build ${projectId}\``);
     return;
 };
 export default sync;

@@ -7,6 +7,7 @@
   "homepage": "https://webstudio.is",
   "scripts": {
     "dev": "pnpm build --watch",
+    "prebuild": "tsx ./lib/prebuild.js",
     "build": "pnpm clean && esbuild ./src/* --outdir=./lib --platform=node",
     "clean": "rm -fr ./lib"
   },

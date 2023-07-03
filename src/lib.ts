@@ -14,6 +14,7 @@ export const MAX_TRIES = 3;
 export const BUILD_DIR = 'app';
 export const CONFIG_PATH = xdgAppPaths("webstudio").config();
 export const CONFIG_FILE = path.join(CONFIG_PATH, "config.json");
+export let pm: string | null = null;
 export const supportedBuildTypes = ['remix-app-server', 'express', 'architect', 'flyio', 'netlify', 'vercel', 'cloudflare-pages', 'cloudflare-workers', 'deno'];
 
 const HELP = `Usage:
@@ -32,6 +33,31 @@ const HELP = `Usage:
 `;
 export const showHelp = () => {
     console.log(HELP);
+}
+export const detectPackageManager = async () => {
+    const originalverbose = $.verbose;
+    $.verbose = false;
+    try {
+        const pnpm = await $`pnpm --version`.exitCode;
+        const yarn = await $`yarn --version`.exitCode;
+        const npm = await $`npm --version`.exitCode;
+        if (pnpm === 0) {
+            return pm = 'pnpm';
+        }
+        if (yarn === 0) {
+            return pm = 'yarn';
+        }
+        if (npm === 0) {
+            return pm = 'npm';
+        }
+        throw new Error('No package manager found');
+    } catch (e) {
+        throw new Error(e);
+    } finally {
+        $.verbose = originalverbose;
+    }
+
+    $.verbose = originalverbose;
 }
 export const prepareConfigPath = async () => {
     await $`mkdir -p ${CONFIG_PATH}`

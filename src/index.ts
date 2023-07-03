@@ -5,13 +5,11 @@ import { VERSION, prepareConfigPath, showHelp, supportedBuildTypes } from "./lib
 import login from "./login.js";
 import sync from "./sync.js";
 import build from "./build.js";
-import serve from "./serve.js";
 
 const commands = {
     sync,
     login,
     build,
-    serve
 };
 
 type Command = keyof typeof commands;
