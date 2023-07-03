@@ -15,31 +15,38 @@ const commands = {
 type Command = keyof typeof commands;
 
 export const main = async () => {
-    const args = parseArgs({
-        options: {
-            download: {
-                type: "boolean",
+    let args;
+    try {
+        args = parseArgs({
+            options: {
+                download: {
+                    type: "boolean",
+                },
+                debug: {
+                    type: "boolean",
+                    short: "d",
+                },
+                version: {
+                    type: "boolean",
+                    short: "v",
+                },
+                help: {
+                    type: "boolean",
+                    short: "h",
+                },
+                type: {
+                    type: "string",
+                    short: "t",
+                    default: "remix-app-server",
+                }
             },
-            debug: {
-                type: "boolean",
-                short: "d",
-            },
-            version: {
-                type: "boolean",
-                short: "v",
-            },
-            help: {
-                type: "boolean",
-                short: "h",
-            },
-            type: {
-                type: "string",
-                short: "t",
-                default: "remix-app-server",
-            },
-        },
-        allowPositionals: true,
-    });
+            allowPositionals: true,
+        });
+    } catch (e) {
+        console.error(e);
+        return showHelp();
+    }
+
     if (args.values.debug) {
         $.verbose = true;
     } else {
