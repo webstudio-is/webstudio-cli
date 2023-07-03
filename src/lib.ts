@@ -22,8 +22,7 @@ const HELP = `Usage:
   Commands:
     login <shared link>             Login to Webstudio with shared link
     sync <projectId>                Download a project's site data
-    build [projectId]               Build a site (default: use pre-downloaded data at './app/<projectId>.json')
-    serve                           Serve a site locally
+    build [projectId]               Build a site
   Flags:
     --type, -t                      Build type chosen during build command (default: remix-app-server) 
                                     (options: ${supportedBuildTypes.join(', ')})
