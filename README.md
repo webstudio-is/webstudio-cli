@@ -2,7 +2,7 @@
 
 Webstudio CLI lets you interract with your Webstudio instance (or our cloud) from the command line.
 
-## Running your site locally
+## How to use it
 
 1. Login `./bin/cli.js login`
    You need to make a shared link with build options. You can do this in the Webstudio UI:
