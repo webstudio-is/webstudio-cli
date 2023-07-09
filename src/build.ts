@@ -26,6 +26,6 @@ export const build = async (args: {
   await $`${pm} run prebuild ${projectId}`;
   await $`cd ${BUILD_DIR} && ${pm} install && ${pm} run build`;
   console.log(
-    `\nCompleted! You can find the build assets in "./${BUILD_DIR}" directory!`
+    `\nCompleted! You can find the build assets in "./${BUILD_DIR}" directory!`,
   );
 };

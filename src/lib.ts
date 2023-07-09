@@ -90,13 +90,13 @@ export const prepareDefaultRemixConfig = async (type: string) => {
   const defaultJson = JSON.parse(def);
   const template = await fs.readFile(
     `./templates/${type}/package.json`,
-    "utf-8"
+    "utf-8",
   );
   const templateJson = JSON.parse(template);
   const merged = deepmerge(defaultJson, templateJson);
   await fs.writeFile(
     `./${BUILD_DIR}/package.json`,
-    JSON.stringify(merged, null, 2)
+    JSON.stringify(merged, null, 2),
   );
 
   await $`cp ./templates/defaults/template.tsx ./${BUILD_DIR}`;
