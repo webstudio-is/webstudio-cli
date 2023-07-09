@@ -4,7 +4,7 @@ import path from "node:path";
 import fs from "fs/promises";
 import type { Auth, Config } from "./types.js";
 import { deepmerge } from "deepmerge-ts";
-import login from "./login.js";
+import { login } from "./login.js";
 import packageJson from "../package.json" assert { type: "json" };
 
 let currentTries = 0;
@@ -90,13 +90,13 @@ export const prepareDefaultRemixConfig = async (type: string) => {
   const defaultJson = JSON.parse(def);
   const template = await fs.readFile(
     `./templates/${type}/package.json`,
-    "utf-8",
+    "utf-8"
   );
   const templateJson = JSON.parse(template);
   const merged = deepmerge(defaultJson, templateJson);
   await fs.writeFile(
     `./${BUILD_DIR}/package.json`,
-    JSON.stringify(merged, null, 2),
+    JSON.stringify(merged, null, 2)
   );
 
   await $`cp ./templates/defaults/template.tsx ./${BUILD_DIR}`;
