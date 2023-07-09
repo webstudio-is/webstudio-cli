@@ -1,0 +1,24 @@
+{
+    "extends": "@webstudio-is/tsconfig/base.json",
+    "exclude": [
+        "node_modules",
+        "build",
+        "public/build"
+    ],
+    "include": [
+        "src/**/*.ts",
+        "fixtures/**/*.ts",
+        "functions/**/*.ts"
+    ],
+    "compilerOptions": {
+        "target": "esnext",
+        "module": "esnext",
+        "lib": [
+            "esnext"
+        ],
+        "moduleResolution": "bundler",
+        "customConditions": null,
+        // "noEmit": true,
+        "incremental": true,
+    }
+}

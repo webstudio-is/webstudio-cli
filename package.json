@@ -8,7 +8,8 @@
   "scripts": {
     "dev": "pnpm build --watch",
     "prebuild": "tsx ./lib/prebuild.js",
-    "build": "pnpm clean && esbuild ./src/* --outdir=./lib --platform=node",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "build": "pnpm format && pnpm clean && esbuild ./src/* --outdir=./lib --platform=node",
     "clean": "rm -fr ./lib"
   },
   "type": "module",
@@ -22,11 +23,14 @@
   },
   "dependencies": {
     "@webstudio-is/asset-uploader": "^0.75.0",
+    "@webstudio-is/eslint-config-custom": "^1.0.6",
     "@webstudio-is/project-build": "^0.75.0",
     "@webstudio-is/react-sdk": "^0.75.0",
     "@webstudio-is/sdk-components-react": "^0.75.0",
     "@webstudio-is/sdk-components-react-remix": "^0.75.0",
+    "@webstudio-is/tsconfig": "^1.0.6",
     "deepmerge-ts": "^5.1.0",
+    "prettier": "^3.0.0",
     "tsx": "^3.12.7",
     "xdg-app-paths": "^8.3.0",
     "zx": "^7.2.2"

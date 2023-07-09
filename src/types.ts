@@ -1,7 +1,7 @@
 export type Config = {
-    [projectId: string]: Auth
-}
+  [projectId: string]: Auth;
+};
 export type Auth = {
-    token: string,
-    host: string,
-} | null
+  token: string;
+  host: string;
+} | null;
