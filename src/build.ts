@@ -1,11 +1,12 @@
 import { sync } from "./sync.js";
 import {
-  BUILD_DIR,
   checkSiteData,
   detectPackageManager,
   pm,
   prepareDefaultRemixConfig,
 } from "./lib.js";
+import type { ProjectType } from "./types.js";
+// import { BUILD_DIR } from "./constants.js";
 
 export const build = async (args: {
   positionals: Array<string>;
@@ -21,11 +22,12 @@ export const build = async (args: {
       throw new Error("Cannot build project");
     }
   }
-  await prepareDefaultRemixConfig(args.values.type);
+
+  await prepareDefaultRemixConfig(args.values.type as ProjectType);
   console.log(`Building project...`);
   await $`${pm} run prebuild ${projectId}`;
-  await $`cd ${BUILD_DIR} && ${pm} install && ${pm} run build`;
-  console.log(
-    `\nCompleted! You can find the build assets in "./${BUILD_DIR}" directory!`,
-  );
+  // await $`cd ${BUILD_DIR} && ${pm} install && ${pm} run build`;
+  // console.log(
+  //   `\nCompleted! You can find the build assets in "./${BUILD_DIR}" directory!`,
+  // );
 };

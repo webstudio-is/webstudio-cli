@@ -1,7 +1,7 @@
 import * as readline from "node:readline/promises";
 import fs from "node:fs/promises";
 import { stdin as input, stdout as output } from "node:process";
-import { CONFIG_FILE } from "./lib.js";
+import { CONFIG_FILE } from "./constants.js";
 
 export const login = async () => {
   const rl = readline.createInterface({ input, output });
@@ -28,11 +28,13 @@ export const login = async () => {
         token,
       },
     };
+    console.log(CONFIG_FILE);
     await fs.writeFile(CONFIG_FILE, JSON.stringify(newConfig, null, 2));
     rl.close();
     console.log(`Saved credentials for project ${projectId}.`);
     return;
   } catch (error) {
+    console.error(error);
     console.error("Invalid share link.");
     process.exit(1);
   }

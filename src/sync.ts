@@ -1,4 +1,5 @@
-import { BUILD_DIR, checkAuth, fetchApi, prepareBuildDir } from "./lib.js";
+import { checkAuth, fetchApi, prepareBuildDir } from "./lib.js";
+import { BUILD_DIR } from "./constants.js";
 import fs from "fs/promises";
 
 export const sync = async (args: {
@@ -9,7 +10,9 @@ export const sync = async (args: {
   if (projectId == null) {
     throw new Error("No projectId specified.");
   }
+
   await prepareBuildDir();
+
   const rawData = `${BUILD_DIR}/${projectId}.json`;
   const config = await checkAuth(projectId);
   if (!config) {

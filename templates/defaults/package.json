@@ -1,6 +1,6 @@
 {
-    "dependencies": {
-        "@webstudio-is/form-handlers": "^0.75.0",
-        "use-sync-external-store": "^1.2.0"
-    }
+  "dependencies": {
+    "@webstudio-is/form-handlers": "^0.75.0",
+    "use-sync-external-store": "^1.2.0"
+  }
 }

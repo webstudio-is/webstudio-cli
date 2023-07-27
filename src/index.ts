@@ -1,19 +1,16 @@
 import "zx/globals";
 import { parseArgs } from "node:util";
-import {
-  VERSION,
-  prepareConfigPath,
-  showHelp,
-  supportedBuildTypes,
-} from "./lib.js";
+import { prepareConfigPath, showHelp } from "./lib.js";
+import { VERSION } from "./constants.js";
+import { ProjectType } from "./types.js";
 
-import { login } from "./login.js";
-import { sync } from "./sync.js";
+// import { login } from "./login.js";
+// import { sync } from "./sync.js";
 import { build } from "./build.js";
 
 const commands = {
-  sync,
-  login,
+  // sync,
+  // login,
   build,
 };
 
@@ -41,7 +38,7 @@ export const main = async () => {
         type: {
           type: "string",
           short: "t",
-          default: "remix-app-server",
+          default: "vercel",
         },
       },
       allowPositionals: true,
@@ -62,10 +59,13 @@ export const main = async () => {
   if (args.values.help || args.positionals.length === 0) {
     if (
       args.values.type &&
-      supportedBuildTypes.includes(args.values.type) === false
+      Object.values(ProjectType).includes(args.values.type as ProjectType) ===
+        false
     ) {
       console.error(`Invalid build type: ${args.values.type}`);
-      console.log(`Supported build types: ${supportedBuildTypes.join(", ")}\n`);
+      console.log(
+        `Supported build types: ${Object.values(ProjectType).join(", ")}\n`,
+      );
     }
     return showHelp();
   }

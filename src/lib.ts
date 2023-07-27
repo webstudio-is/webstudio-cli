@@ -1,48 +1,26 @@
 import "zx/globals";
-import xdgAppPaths from "xdg-app-paths";
-import path from "node:path";
 import fs from "fs/promises";
-import type { Auth, Config } from "./types.js";
+import { ProjectType, type Auth, type Config, type Folder } from "./types.js";
 import { deepmerge } from "deepmerge-ts";
 import { login } from "./login.js";
-import packageJson from "../package.json" assert { type: "json" };
+import {
+  CONFIG_FILE,
+  CONFIG_PATH,
+  HELP,
+  MAX_RETRIES,
+  BUILD_DIR,
+} from "./constants.js";
+import { TEMPLATES } from "./templates.js";
+import { writeFileSync } from "fs";
 
 let currentTries = 0;
 
-export const VERSION = packageJson.version;
-export const MAX_RETRIES = 3;
-export const BUILD_DIR = "app";
-export const CONFIG_PATH = xdgAppPaths("webstudio").config();
-export const CONFIG_FILE = path.join(CONFIG_PATH, "config.json");
 export let pm: string | null = null;
-export const supportedBuildTypes = [
-  "remix-app-server",
-  "express",
-  "architect",
-  "flyio",
-  "netlify",
-  "vercel",
-  "cloudflare-pages",
-  "cloudflare-workers",
-  "deno",
-];
 
-const HELP = `Usage:
-    $ webstudio commands [flags...]
-  Commands:
-    login <shared link>             Login to Webstudio with shared link
-    sync <projectId>                Download a project's site data
-    build [projectId]               Build a site
-  Flags:
-    --type, -t                      Build type chosen during build command (default: remix-app-server) 
-                                    (options: ${supportedBuildTypes.join(", ")})
-    --debug                         Enable debug mode
-    --help, -h                      Show this help message
-    --version, -v                   Show the version of this script
-`;
 export const showHelp = () => {
   console.log(HELP);
 };
+
 export const detectPackageManager = async () => {
   const originalverbose = $.verbose;
   $.verbose = false;
@@ -66,92 +44,118 @@ export const detectPackageManager = async () => {
     $.verbose = originalverbose;
   }
 };
+
 export const prepareConfigPath = async () => {
   await $`mkdir -p ${CONFIG_PATH}`;
   await checkConfig();
 };
+
 export const prepareBuildDir = async () => {
   await $`rm -rf ${BUILD_DIR}`;
   await $`mkdir -p ${BUILD_DIR}/app/__generated__`;
   await $`mkdir -p ${BUILD_DIR}/app/routes`;
 };
+
 export const checkSiteData = async (args: {
   positionals: Array<string>;
   values?: { type: string };
 }) => {
   const projectId = args.positionals[1];
-  return await $`ls -1 app/${projectId}.json > /dev/null 2>&1`.exitCode;
+  return await $`ls -1 ${BUILD_DIR}/${projectId}.json > /dev/null 2>&1`
+    .exitCode;
 };
 
-export const prepareDefaultRemixConfig = async (type: string) => {
+const getFileContent = (filePath: string, projectType: ProjectType): string => {
+  const parts = filePath.split("/").filter((part) => part !== "");
+  const folder = TEMPLATES[projectType];
+
+  const findFileInFolder = (
+    searchFolder: Folder,
+    remainingParts: string[],
+  ): string => {
+    const fileName = remainingParts[0];
+
+    if (remainingParts.length === 1) {
+      const file = searchFolder.files.find((f) => f.name === fileName);
+      if (file) {
+        return file.content;
+      }
+
+      throw new Error(`Failed to find the file ${filePath} from the template`);
+    } else {
+      const nextFolderName = remainingParts[1];
+      const nextSubFolder = searchFolder.subFolders.find(
+        (subFolder) => subFolder.name === nextFolderName,
+      );
+
+      if (nextSubFolder) {
+        return findFileInFolder(nextSubFolder, remainingParts.slice(1));
+      } else {
+        throw new Error(
+          `Failed to find the file ${filePath} from the template`,
+        );
+      }
+    }
+  };
+
+  return findFileInFolder(folder, parts);
+};
+
+export const prepareDefaultRemixConfig = async (type: ProjectType) => {
   console.log(`Preparing default configurations for ${type}...`);
-  await $`cp ./templates/defaults/root.tsx ./${BUILD_DIR}/app`;
-  const def = await fs.readFile("./templates/defaults/package.json", "utf-8");
-  const defaultJson = JSON.parse(def);
-  const template = await fs.readFile(
-    `./templates/${type}/package.json`,
-    "utf-8",
+
+  const defaultPackageJSON = JSON.parse(
+    getFileContent("/package.json", ProjectType.defaults),
   );
-  const templateJson = JSON.parse(template);
-  const merged = deepmerge(defaultJson, templateJson);
-  await fs.writeFile(
-    `./${BUILD_DIR}/package.json`,
-    JSON.stringify(merged, null, 2),
+  const projectTypePackageJSON = JSON.parse(
+    getFileContent("/package.json", type),
   );
 
-  await $`cp ./templates/defaults/template.tsx ./${BUILD_DIR}`;
-  await $`cp ./templates/defaults/remix.config.js ./${BUILD_DIR}`;
+  const mergedPackageJSON = deepmerge(
+    defaultPackageJSON,
+    projectTypePackageJSON,
+  );
+
+  /* Merging the default package.json with the template specific package.json */
+  writeFileSync(
+    `${BUILD_DIR}/package.json`,
+    JSON.stringify(mergedPackageJSON, null, 2),
+  );
+
+  writeFileSync(
+    `${BUILD_DIR}/template.tsx`,
+    getFileContent("/template.tsx", ProjectType.defaults),
+  );
 
   switch (type) {
-    case "express":
-      await $`cp ./templates/${type}/server.js ./${BUILD_DIR}`;
+    case ProjectType.vercel: {
+      writeFileSync(
+        `${BUILD_DIR}/remix.config.js`,
+        getFileContent("/remix.config.js", ProjectType.vercel),
+      );
+
+      writeFileSync(
+        `${BUILD_DIR}/server.ts`,
+        getFileContent("/server.ts", ProjectType.vercel),
+      );
+
       break;
-    case "architect":
-      await $`cp ./templates/${type}/server.ts ./${BUILD_DIR}`;
-      await $`cp -Pr ./templates/${type}/server/ ./${BUILD_DIR}`;
-      await $`cp -Pr ./templates/${type}/app.arc ./${BUILD_DIR}`;
-      break;
-    case "flyio":
-      await $`cp ./templates/${type}/remix.config.js ./${BUILD_DIR}`;
-      break;
-    case "netlify":
-      await $`cp ./templates/${type}/remix.config.js ./${BUILD_DIR}`;
-      await $`cp ./templates/${type}/server.ts ./${BUILD_DIR}`;
-      await $`cp ./templates/${type}/netlify.toml ./${BUILD_DIR}`;
-      break;
-    case "vercel":
-      await $`cp ./templates/${type}/remix.config.js ./${BUILD_DIR}`;
-      await $`cp ./templates/${type}/server.ts ./${BUILD_DIR}`;
-      break;
-    case "cloudflare-pages":
-      await $`cp ./templates/${type}/remix.config.js ./${BUILD_DIR}`;
-      await $`cp ./templates/${type}/server.ts ./${BUILD_DIR}`;
-      await $`cp ./templates/${type}/wrangler.toml ./${BUILD_DIR}`;
-      await $`cp ./templates/${type}/.node-version ./${BUILD_DIR}`;
-      await $`cp ./templates/${type}/template.tsx ./${BUILD_DIR}`;
-      await $`cp -Pr ./templates/${type}/public ./${BUILD_DIR}/public`;
-      break;
-    case "cloudflare-workers":
-      await $`cp ./templates/${type}/remix.config.js ./${BUILD_DIR}`;
-      await $`cp ./templates/${type}/server.ts ./${BUILD_DIR}`;
-      await $`cp ./templates/${type}/wrangler.toml ./${BUILD_DIR}`;
-      await $`cp ./templates/${type}/template.tsx ./${BUILD_DIR}`;
-      break;
-    case "deno":
-      await $`cp ./templates/${type}/remix.config.js ./${BUILD_DIR}`;
-      await $`cp ./templates/${type}/server.ts ./${BUILD_DIR}`;
-      await $`cp ./templates/${type}/deno.json ./${BUILD_DIR}`;
-      await $`cp ./templates/${type}/template.tsx ./${BUILD_DIR}`;
-      await $`cp -Pr ./templates/${type}/.vscode ./${BUILD_DIR}`;
+    }
+    default:
+      throw new Error(`Unknown project type ${type}`);
   }
 };
+
 export const checkConfig = async () => {
   try {
+    console.log("checking access");
     await fs.access(CONFIG_FILE);
   } catch (error) {
+    console.log(JSON.stringify({}));
     fs.writeFile(CONFIG_FILE, JSON.stringify({}));
   }
 };
+
 export const checkAuth = async (projectId: string): Promise<Auth> => {
   if (currentTries >= MAX_RETRIES) {
     throw new Error("Too many tries, please login again.");
@@ -176,6 +180,7 @@ export const getConfig = async () => {
     return null;
   }
 };
+
 export const fetchApi = async (url: string) => {
   const response = await fetch(url, {
     method: "GET",
