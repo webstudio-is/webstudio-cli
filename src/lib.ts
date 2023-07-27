@@ -15,34 +15,8 @@ import { writeFileSync } from "fs";
 
 let currentTries = 0;
 
-export let pm: string | null = null;
-
 export const showHelp = () => {
   console.log(HELP);
-};
-
-export const detectPackageManager = async () => {
-  const originalverbose = $.verbose;
-  $.verbose = false;
-  try {
-    const pnpm = await $`pnpm --version`.exitCode;
-    if (pnpm === 0) {
-      return (pm = "pnpm");
-    }
-    const yarn = await $`yarn --version`.exitCode;
-    if (yarn === 0) {
-      return (pm = "yarn");
-    }
-    const npm = await $`npm --version`.exitCode;
-    if (npm === 0) {
-      return (pm = "npm");
-    }
-    throw new Error("No package manager found");
-  } catch (error) {
-    throw new Error(error);
-  } finally {
-    $.verbose = originalverbose;
-  }
 };
 
 export const prepareConfigPath = async () => {
@@ -125,6 +99,11 @@ export const prepareDefaultRemixConfig = async (type: ProjectType) => {
   writeFileSync(
     `${BUILD_DIR}/template.tsx`,
     getFileContent("/template.tsx", ProjectType.defaults),
+  );
+
+  writeFileSync(
+    `${BUILD_DIR}/app/root.tsx`,
+    getFileContent("/root.tsx", ProjectType.defaults),
   );
 
   switch (type) {

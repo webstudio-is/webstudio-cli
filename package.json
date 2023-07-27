@@ -8,7 +8,6 @@
   "scripts": {
     "dev": "pnpm build:templates &&  pnpm build --watch",
     "build:templates": "tsx ./templates/build.ts",
-    "prebuild": "tsx ./lib/prebuild.js",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "build": "pnpm format && pnpm clean && esbuild ./src/* --outdir=./lib --platform=node",
     "clean": "rm -fr ./lib"
