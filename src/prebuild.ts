@@ -8,14 +8,14 @@ import * as remixComponentMetas from "@webstudio-is/sdk-components-react-remix/m
 import type { Data, Params } from "@webstudio-is/react-sdk";
 import type { Instance, Build, Page, Prop } from "@webstudio-is/project-build";
 import type { Asset } from "@webstudio-is/asset-uploader";
-import { BUILD_DIR } from "./constants.js";
+import { BUILD_DIR, getProjectDataPath } from "./constants.js";
 
 export const prebuild = (projectId: string) => {
   const baseDir = BUILD_DIR;
   const jsonDir = path.join(BUILD_DIR, "app");
 
   const siteDataString = fs.readFileSync(
-    path.join(baseDir, `${projectId}.json`),
+    getProjectDataPath(projectId),
     "utf-8",
   );
 

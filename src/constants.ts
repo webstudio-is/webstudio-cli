@@ -9,8 +9,11 @@ export const MAX_RETRIES = 3;
   TODO: Let's see if we can change this with the project name
 */
 export const BUILD_DIR = join(process.cwd(), "webstudio-project");
-export const CONFIG_PATH = xdgAppPaths("webstudio").config();
-export const CONFIG_FILE = path.join(CONFIG_PATH, "config.json");
+export const GLOBAL_CONFIG_PATH = xdgAppPaths("webstudio").config();
+export const GLOBAL_CONFIG_FILE = path.join(GLOBAL_CONFIG_PATH, "config.json");
+
+export const getProjectDataPath = (projectId: string) =>
+  join(BUILD_DIR, `webstudio-${projectId}.json`);
 
 export const HELP = `Usage:
     $ webstudio commands [flags...]
@@ -19,7 +22,7 @@ export const HELP = `Usage:
     sync <projectId>                Download a project's site data
     build [projectId]               Build a site
   Flags:
-    --type, -t                      Build type chosen during build command (default: vercel)
+    --type, -t                      Build type chosen during build command (default: remix-app-server)
                                     (options: ${Object.values(ProjectType).join(
                                       ", ",
                                     )})

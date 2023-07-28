@@ -1,17 +1,18 @@
 import "zx/globals";
 import fs from "fs/promises";
-import { ProjectType, type Auth, type Config, type Folder } from "./types.js";
+import { join } from "node:path";
 import { deepmerge } from "deepmerge-ts";
+import { ProjectType, type Auth, type Config, type Folder } from "./types.js";
 import { login } from "./login.js";
 import {
-  CONFIG_FILE,
-  CONFIG_PATH,
+  GLOBAL_CONFIG_FILE,
+  GLOBAL_CONFIG_PATH,
   HELP,
   MAX_RETRIES,
   BUILD_DIR,
+  getProjectDataPath,
 } from "./constants.js";
 import { TEMPLATES } from "./templates.js";
-import { writeFileSync } from "fs";
 
 let currentTries = 0;
 
@@ -20,7 +21,7 @@ export const showHelp = () => {
 };
 
 export const prepareConfigPath = async () => {
-  await $`mkdir -p ${CONFIG_PATH}`;
+  await $`mkdir -p ${GLOBAL_CONFIG_PATH}`;
   await checkConfig();
 };
 
@@ -35,103 +36,59 @@ export const checkSiteData = async (args: {
   values?: { type: string };
 }) => {
   const projectId = args.positionals[1];
-  return await $`ls -1 ${BUILD_DIR}/${projectId}.json > /dev/null 2>&1`
+  return await $`ls -1 ${getProjectDataPath(projectId)} > /dev/null 2>&1`
     .exitCode;
 };
 
-const getFileContent = (filePath: string, projectType: ProjectType): string => {
-  const parts = filePath.split("/").filter((part) => part !== "");
-  const folder = TEMPLATES[projectType];
+export const prepareDefaultRemixConfig = async (projectType: ProjectType) => {
+  console.log(`Preparing default configurations for ${projectType}...`);
 
-  const findFileInFolder = (
-    searchFolder: Folder,
-    remainingParts: string[],
-  ): string => {
-    const fileName = remainingParts[0];
+  const defaultTemplate = TEMPLATES["defaults"];
+  const projectTemplate = TEMPLATES[projectType];
 
-    if (remainingParts.length === 1) {
-      const file = searchFolder.files.find((f) => f.name === fileName);
-      if (file) {
-        return file.content;
-      }
-
-      throw new Error(`Failed to find the file ${filePath} from the template`);
-    } else {
-      const nextFolderName = remainingParts[1];
-      const nextSubFolder = searchFolder.subFolders.find(
-        (subFolder) => subFolder.name === nextFolderName,
-      );
-
-      if (nextSubFolder) {
-        return findFileInFolder(nextSubFolder, remainingParts.slice(1));
-      } else {
-        throw new Error(
-          `Failed to find the file ${filePath} from the template`,
-        );
-      }
-    }
-  };
-
-  return findFileInFolder(folder, parts);
-};
-
-export const prepareDefaultRemixConfig = async (type: ProjectType) => {
-  console.log(`Preparing default configurations for ${type}...`);
+  await parseFolderAndWriteFiles(defaultTemplate, BUILD_DIR);
+  await parseFolderAndWriteFiles(projectTemplate, BUILD_DIR);
 
   const defaultPackageJSON = JSON.parse(
-    getFileContent("/package.json", ProjectType.defaults),
+    defaultTemplate.files.find((file) => file.name === "package.json")
+      ?.content || "{}",
   );
-  const projectTypePackageJSON = JSON.parse(
-    getFileContent("/package.json", type),
+  const projectPackageJSON = JSON.parse(
+    projectTemplate.files.find((file) => file.name === "package.json")
+      ?.content || "{}",
   );
-
-  const mergedPackageJSON = deepmerge(
-    defaultPackageJSON,
-    projectTypePackageJSON,
+  const packageJSON = deepmerge(defaultPackageJSON, projectPackageJSON);
+  await fs.writeFile(
+    join(BUILD_DIR, "package.json"),
+    JSON.stringify(packageJSON, null, 2),
+    "utf8",
   );
+};
 
-  /* Merging the default package.json with the template specific package.json */
-  writeFileSync(
-    `${BUILD_DIR}/package.json`,
-    JSON.stringify(mergedPackageJSON, null, 2),
-  );
-
-  writeFileSync(
-    `${BUILD_DIR}/template.tsx`,
-    getFileContent("/template.tsx", ProjectType.defaults),
-  );
-
-  writeFileSync(
-    `${BUILD_DIR}/app/root.tsx`,
-    getFileContent("/root.tsx", ProjectType.defaults),
-  );
-
-  switch (type) {
-    case ProjectType.vercel: {
-      writeFileSync(
-        `${BUILD_DIR}/remix.config.js`,
-        getFileContent("/remix.config.js", ProjectType.vercel),
-      );
-
-      writeFileSync(
-        `${BUILD_DIR}/server.ts`,
-        getFileContent("/server.ts", ProjectType.vercel),
-      );
-
-      break;
+const parseFolderAndWriteFiles = async (folder: Folder, path: string) => {
+  for (let i = 0; i < folder.files.length; i++) {
+    const file = folder.files[i];
+    if (file.name === "package.json") {
+      continue;
     }
-    default:
-      throw new Error(`Unknown project type ${type}`);
+
+    const filePath = join(path, file.name);
+    await fs.writeFile(filePath, file.content, "utf8");
+  }
+
+  for (let j = 0; j < folder.subFolders.length; j++) {
+    const subFolder = folder.subFolders[j];
+    await parseFolderAndWriteFiles(subFolder, join(path, subFolder.name));
   }
 };
 
 export const checkConfig = async () => {
   try {
     console.log("checking access");
-    await fs.access(CONFIG_FILE);
+    await fs.access(GLOBAL_CONFIG_FILE);
   } catch (error) {
     console.log(JSON.stringify({}));
-    fs.writeFile(CONFIG_FILE, JSON.stringify({}));
+    fs.writeFile(GLOBAL_CONFIG_FILE, JSON.stringify({}));
   }
 };
 
@@ -151,7 +108,7 @@ export const checkAuth = async (projectId: string): Promise<Auth> => {
 };
 
 export const getConfig = async () => {
-  const config = await fs.readFile(CONFIG_FILE, "utf-8");
+  const config = await fs.readFile(GLOBAL_CONFIG_FILE, "utf-8");
   try {
     const json = JSON.parse(config);
     return json;

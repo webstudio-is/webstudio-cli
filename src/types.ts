@@ -22,4 +22,5 @@ export interface Folder {
 export enum ProjectType {
   "vercel" = "vercel",
   "defaults" = "defaults",
+  "remix-app-server" = "remix-app-server",
 }

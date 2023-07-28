@@ -4,13 +4,15 @@ import { prepareConfigPath, showHelp } from "./lib.js";
 import { VERSION } from "./constants.js";
 import { ProjectType } from "./types.js";
 
-// import { login } from "./login.js";
-// import { sync } from "./sync.js";
+import { login } from "./login.js";
+import { sync } from "./sync.js";
 import { build } from "./build.js";
+import { serve } from "./serve.js";
 
 const commands = {
-  // sync,
-  // login,
+  serve,
+  sync,
+  login,
   build,
 };
 
@@ -38,7 +40,7 @@ export const main = async () => {
         type: {
           type: "string",
           short: "t",
-          default: "vercel",
+          default: "remix-app-server",
         },
       },
       allowPositionals: true,

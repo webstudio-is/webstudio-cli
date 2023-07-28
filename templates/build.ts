@@ -1,8 +1,8 @@
 import { readdirSync, lstatSync, readFileSync, writeFileSync } from "fs";
 import { join } from "path";
-import { Folder } from "../src/types";
+import { Folder, ProjectType } from "../src/types";
 
-const TEMPLATES_TO_BUILD = ["vercel", "defaults"];
+const TEMPLATES_TO_BUILD = Object.keys(ProjectType);
 
 console.log("Building Templates...");
 
@@ -66,7 +66,14 @@ for (let i = 0; i < TEMPLATES_TO_BUILD.length; i++) {
   TEMPLATES_JSON[template] = templateFiles;
 }
 
-const content = `import type { Folder, ProjectType } from "./types" \n
+const content = `/*
+
+This is a auto-generated file. Please don't change manually.
+If needed to make any changes. Add them to ./templates folder and run pnpm run build:templates
+
+*/
+
+import type { Folder, ProjectType } from "./types" \n
 export const TEMPLATES: Record<ProjectType, Folder> = ${JSON.stringify(
   TEMPLATES_JSON,
   null,

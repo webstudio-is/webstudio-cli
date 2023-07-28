@@ -1,5 +1,5 @@
+import { getProjectDataPath } from "./constants.js";
 import { checkAuth, fetchApi, prepareBuildDir } from "./lib.js";
-import { BUILD_DIR } from "./constants.js";
 import fs from "fs/promises";
 
 export const sync = async (args: {
@@ -13,7 +13,6 @@ export const sync = async (args: {
 
   await prepareBuildDir();
 
-  const rawData = `${BUILD_DIR}/${projectId}.json`;
   const config = await checkAuth(projectId);
   if (!config) {
     throw new Error("Not logged in");
@@ -23,7 +22,7 @@ export const sync = async (args: {
   webstudioUrl.pathname = `/rest/buildId/${projectId}`;
   webstudioUrl.searchParams.append("authToken", token);
 
-  console.log(`Checking latest build for project ${projectId}.`);
+  console.log(`\n Checking latest build for project ${projectId}.`);
   const buildIdData = await fetchApi(webstudioUrl.href);
   const { buildId } = buildIdData;
   if (!buildId) {
@@ -31,11 +30,17 @@ export const sync = async (args: {
   }
 
   webstudioUrl.pathname = `/rest/build/${buildId}`;
-  console.log(`Downloading project data.`);
-  const projectData = await fetchApi(webstudioUrl.href);
-  await fs.writeFile(rawData, JSON.stringify(projectData));
+  console.log(`\n Downloading project data.`);
 
-  console.log(`Project data downloaded to ${rawData}.`);
-  console.log(`\nTo build it, run \`webstudio build ${projectId}\``);
+  const projectData = await fetchApi(webstudioUrl.href);
+  await fs.writeFile(
+    getProjectDataPath(projectId),
+    JSON.stringify(projectData),
+  );
+
+  console.log(
+    `\n Project data downloaded to ${getProjectDataPath(projectId)}.`,
+  );
+  console.log(`\n To build it, run \`webstudio build ${projectId}\``);
   return;
 };
