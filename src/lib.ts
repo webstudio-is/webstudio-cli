@@ -1,4 +1,5 @@
 import "zx/globals";
+import { fetch } from "zx";
 import fs from "fs/promises";
 import { join } from "node:path";
 import { deepmerge } from "deepmerge-ts";
@@ -162,11 +163,7 @@ export const fetchApi = async (url: string) => {
 export const ensureFileInPath = async (filePath: string) => {
   const dirname = path.dirname(filePath);
 
-  try {
-    await fs.access(dirname, fs.constants.F_OK);
-  } catch (err) {
-    await fs.mkdir(dirname, { recursive: true });
-  }
+  await ensureFolderExists(dirname);
 
   try {
     await fs.access(filePath, fs.constants.F_OK);
@@ -175,15 +172,41 @@ export const ensureFileInPath = async (filePath: string) => {
   }
 };
 
+export const ensureFolderExists = async (folderPath: string) => {
+  try {
+    await fs.access(folderPath, fs.constants.F_OK);
+  } catch (err) {
+    await fs.mkdir(folderPath, { recursive: true });
+  }
+};
+
 export const deleteFolderIfExists = async (generatedDir: string) => {
   try {
-    await fs.rmdir(generatedDir, { recursive: true });
+    await fs.rm(generatedDir, { recursive: true });
     console.log("Folder deleted successfully (if it existed).");
   } catch (err) {
-    if (err.code !== "ENOENT") {
+    if (err.code === "ENOENT") {
       return;
     } else {
-      console.error("Error while deleting the folder:", err);
+      console.error("Error while deleting the folder: \n", err);
     }
+  }
+};
+
+export const downloadImage = async (url: string, localPath: string) => {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(
+        `Error while downloading the image. Status code: ${response.status}`,
+      );
+    }
+
+    const imageBuffer = await response.arrayBuffer();
+    return fs.writeFile(localPath, Buffer.from(imageBuffer));
+  } catch (err) {
+    console.error(
+      `Error while downloading the image from ${url}: ${err.message}`,
+    );
   }
 };

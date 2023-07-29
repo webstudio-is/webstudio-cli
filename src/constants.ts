@@ -1,7 +1,7 @@
 import packageJson from "../package.json" assert { type: "json" };
 import xdgAppPaths from "xdg-app-paths";
 import { join } from "node:path";
-import { ProjectType } from "./types.js";
+import { ProjectType } from "./types";
 
 export const VERSION = packageJson.version;
 export const MAX_RETRIES = 3;
@@ -13,6 +13,7 @@ export const GLOBAL_CONFIG_FILE = path.join(GLOBAL_CONFIG_PATH, "config.json");
 export const PROJECT_PATH = join(process.cwd(), "webstudio-project");
 export const PORJECT_CONFIG_FILE = "webstudio.json";
 export const PROJECT_DATA_PATH = join(PROJECT_PATH, PORJECT_CONFIG_FILE);
+export const ASSETS_BASE = "/cgi/asset/";
 
 export const HELP = `Usage:
     $ webstudio commands [flags...]

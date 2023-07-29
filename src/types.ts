@@ -30,7 +30,7 @@ export type ComponentsByPage = {
 export type SiteDataByPage = {
   [path: string]: {
     page: Page;
-    build: Pick<Build, "props" | "instances" | "dataSources">;
+    build: Pick<Build, "props" | "instances" | "dataSources" | "deployment">;
     assets: Array<Asset>;
     params?: Params;
     pages: Array<Page>;

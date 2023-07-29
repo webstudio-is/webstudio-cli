@@ -7,8 +7,8 @@ import * as remixComponentMetas from "@webstudio-is/sdk-components-react-remix/m
 import type { Data } from "@webstudio-is/react-sdk";
 import type { Instance, Prop } from "@webstudio-is/project-build";
 
-import { PORJECT_CONFIG_FILE } from "./constants";
-import { deleteFolderIfExists } from "./lib";
+import { PORJECT_CONFIG_FILE, ASSETS_BASE } from "./constants";
+import { deleteFolderIfExists, ensureFolderExists, downloadImage } from "./lib";
 import type { RemixRoutes, ComponentsByPage, SiteDataByPage } from "./types";
 
 export const prebuild = async (buildDir: string) => {
@@ -23,10 +23,18 @@ export const prebuild = async (buildDir: string) => {
   const siteData: Data & { user?: { email: string | null } } =
     JSON.parse(projectData);
 
-  const { assets } = siteData;
+  const {
+    assets,
+    build: { deployment },
+  } = siteData;
   const fontAssets: Data["assets"] = [];
+  const imageAssets: ImageAsset[] = [];
 
   for (const asset of assets) {
+    if (asset.type === "image") {
+      imageAssets.push(asset);
+    }
+
     if (asset.type === "font") {
       fontAssets.push(asset);
     }
@@ -94,7 +102,7 @@ export const prebuild = async (buildDir: string) => {
       ),
     },
     {
-      assetBaseUrl: "/cgi/asset/",
+      assetBaseUrl: ASSETS_BASE,
     },
   );
 
@@ -217,4 +225,24 @@ export const prebuild = async (buildDir: string) => {
   }
 
   fs.writeFileSync(path.join(generatedDir, "index.css"), cssText, "utf8");
+
+  if (deployment?.projectDomain === undefined) {
+    throw new Error("Project is not deployed yet, cannot download assets");
+  }
+
+  await ensureFolderExists(
+    path.join(buildDir, path.join("public", ASSETS_BASE)),
+  );
+  console.log(`Downloading Assets...`);
+  const assetURLBase = `https://${deployment.projectDomain}.wstd.io${ASSETS_BASE}`;
+
+  await Promise.all(
+    imageAssets.map((image) => {
+      const assetPath = `${assetURLBase}${image.name}`;
+      return downloadImage(
+        assetPath,
+        path.join(buildDir, "public", ASSETS_BASE, image.name),
+      );
+    }),
+  );
 };

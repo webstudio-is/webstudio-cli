@@ -1,7 +1,7 @@
 import * as readline from "node:readline/promises";
 import fs from "node:fs/promises";
 import { stdin as input, stdout as output } from "node:process";
-import { GLOBAL_CONFIG_FILE } from "./constants.js";
+import { GLOBAL_CONFIG_FILE } from "./constants";
 
 export const link = async () => {
   const rl = readline.createInterface({ input, output });
