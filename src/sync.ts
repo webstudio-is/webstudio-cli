@@ -1,46 +1,39 @@
-import { getProjectDataPath } from "./constants.js";
-import { checkAuth, fetchApi, prepareBuildDir } from "./lib.js";
-import fs from "fs/promises";
+import type { Data } from "@webstudio-is/react-sdk";
+import { loadProjectData } from "./lib";
+import { join } from "path";
+import { PROJECT_DATA_PATH, PORJECT_CONFIG_FILE } from "./constants";
 
+/*
+
+Loads the project-data and saves it into a local config file.
+
+webstudio sync <projectId> -> Loads the data and creates a new webstudio project and saves it inside.
+
+webstudio sync -> Loads the new project data and saves it to the webstudio.json in the existing folder.
+
+*/
 export const sync = async (args: {
   positionals: Array<string>;
   values?: { type: string };
 }) => {
   const projectId = args.positionals[1];
   if (projectId == null) {
-    throw new Error("No projectId specified.");
+    try {
+      const content = await fs.readFile(
+        join(process.cwd(), "webstudio.json"),
+        "utf8",
+      );
+      await loadProjectData(
+        (JSON.parse(content) as Data).build.projectId,
+        join(process.cwd(), PORJECT_CONFIG_FILE),
+      );
+      return;
+    } catch {
+      throw new Error(
+        `Need to pass a projectId when then command is not being run inside a exising project`,
+      );
+    }
   }
 
-  await prepareBuildDir();
-
-  const config = await checkAuth(projectId);
-  if (!config) {
-    throw new Error("Not logged in");
-  }
-  const { token, host } = config;
-  const webstudioUrl = new URL(host);
-  webstudioUrl.pathname = `/rest/buildId/${projectId}`;
-  webstudioUrl.searchParams.append("authToken", token);
-
-  console.log(`\n Checking latest build for project ${projectId}.`);
-  const buildIdData = await fetchApi(webstudioUrl.href);
-  const { buildId } = buildIdData;
-  if (!buildId) {
-    throw new Error("Project does not published yet");
-  }
-
-  webstudioUrl.pathname = `/rest/build/${buildId}`;
-  console.log(`\n Downloading project data.`);
-
-  const projectData = await fetchApi(webstudioUrl.href);
-  await fs.writeFile(
-    getProjectDataPath(projectId),
-    JSON.stringify(projectData),
-  );
-
-  console.log(
-    `\n Project data downloaded to ${getProjectDataPath(projectId)}.`,
-  );
-  console.log(`\n To build it, run \`webstudio build ${projectId}\``);
-  return;
+  await loadProjectData(projectId, PROJECT_DATA_PATH);
 };

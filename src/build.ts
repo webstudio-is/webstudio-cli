@@ -1,45 +1,44 @@
-import { sync } from "./sync.js";
-import { checkSiteData, prepareDefaultRemixConfig } from "./lib.js";
-import type { ProjectType } from "./types.js";
-import { prebuild } from "./prebuild.js";
 import ora from "ora";
-import { BUILD_DIR } from "./constants.js";
+import { sync } from "./sync";
+import { prebuild } from "./prebuild";
+import { PROJECT_PATH } from "./constants";
+import { scaffoldProjectTemplate } from "./lib";
+import { ProjectType } from "./types";
+
+/*
+
+Scaffolds a project by merging with the provided template
+
+webstudio build <projectId> -> Loads a project and builds it for a clean new project
+
+webstudio build -> Just builds the project, and performs a autho sync with the current status
+
+*/
 
 export const build = async (args: {
   positionals: Array<string>;
   values: { type: string };
 }) => {
-  const spinner = ora();
+  const spinner = ora("Syncing Project");
   const projectId = args.positionals[1];
+  const buildDir = projectId ? PROJECT_PATH : process.cwd();
 
-  let exitCode = await checkSiteData(args);
+  spinner.start();
+  await sync(args);
+  spinner.text = "Project synced successfully";
 
-  if (exitCode !== 0) {
-    spinner.start(`Syncing project.. \n`);
-    await sync(args);
-    spinner.text = "Checking for site data \n";
+  spinner.text = "Scaffolding template";
+  await scaffoldProjectTemplate(args.values.type as ProjectType, buildDir);
 
-    exitCode = await checkSiteData(args);
-    if (exitCode !== 0) {
-      spinner.fail("Failed in syncing project \n");
-      throw new Error("Cannot build project");
-    }
-    spinner.succeed("Synced project successfully \n");
+  spinner.text = "Running prebuild with the template";
+  await prebuild(buildDir);
+
+  spinner.text = "Installing dependencies...";
+  const buildStatus = await $`cd ${buildDir} && npm install`;
+
+  if (buildStatus.exitCode !== 0) {
+    spinner.fail("Failed in building project \n");
   }
 
-  const buildPorjectSpinner = ora("Scaffolding template \n");
-  buildPorjectSpinner.start();
-
-  await prepareDefaultRemixConfig(args.values.type as ProjectType);
-  prebuild(projectId);
-
-  buildPorjectSpinner.text = "Running Build \n";
-  exitCode = await $`npm install ${BUILD_DIR}`.exitCode;
-  if (exitCode !== 0) {
-    spinner.fail("Failed in build project");
-  }
-
-  buildPorjectSpinner.succeed(
-    `\nYou can find the build assets in \n ${BUILD_DIR}`,
-  );
+  spinner.succeed(`\nYou can find the build assets in \n ${buildDir}`);
 };

@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import { stdin as input, stdout as output } from "node:process";
 import { GLOBAL_CONFIG_FILE } from "./constants.js";
 
-export const login = async () => {
+export const link = async () => {
   const rl = readline.createInterface({ input, output });
   const shareLink = await rl.question(`Paste share link (with build access): `);
   try {

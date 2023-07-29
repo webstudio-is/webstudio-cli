@@ -2,17 +2,15 @@ import "zx/globals";
 import fs from "fs/promises";
 import { join } from "node:path";
 import { deepmerge } from "deepmerge-ts";
-import { ProjectType, type Auth, type Config, type Folder } from "./types.js";
-import { login } from "./login.js";
+import { ProjectType, type Auth, type Config, type Folder } from "./types";
+import { link } from "./link";
 import {
   GLOBAL_CONFIG_FILE,
   GLOBAL_CONFIG_PATH,
   HELP,
   MAX_RETRIES,
-  BUILD_DIR,
-  getProjectDataPath,
-} from "./constants.js";
-import { TEMPLATES } from "./templates.js";
+} from "./constants";
+import { TEMPLATES } from "./templates";
 
 let currentTries = 0;
 
@@ -20,34 +18,22 @@ export const showHelp = () => {
   console.log(HELP);
 };
 
-export const prepareConfigPath = async () => {
+export const prepareGlobalConfigPath = async () => {
   await $`mkdir -p ${GLOBAL_CONFIG_PATH}`;
   await checkConfig();
 };
 
-export const prepareBuildDir = async () => {
-  await $`rm -rf ${BUILD_DIR}`;
-  await $`mkdir -p ${BUILD_DIR}/app/__generated__`;
-  await $`mkdir -p ${BUILD_DIR}/app/routes`;
-};
-
-export const checkSiteData = async (args: {
-  positionals: Array<string>;
-  values?: { type: string };
-}) => {
-  const projectId = args.positionals[1];
-  return await $`ls -1 ${getProjectDataPath(projectId)} > /dev/null 2>&1`
-    .exitCode;
-};
-
-export const prepareDefaultRemixConfig = async (projectType: ProjectType) => {
+export const scaffoldProjectTemplate = async (
+  projectType: ProjectType,
+  buildDir: string,
+) => {
   console.log(`Preparing default configurations for ${projectType}...`);
 
   const defaultTemplate = TEMPLATES["defaults"];
   const projectTemplate = TEMPLATES[projectType];
 
-  await parseFolderAndWriteFiles(defaultTemplate, BUILD_DIR);
-  await parseFolderAndWriteFiles(projectTemplate, BUILD_DIR);
+  await parseFolderAndWriteFiles(defaultTemplate, buildDir);
+  await parseFolderAndWriteFiles(projectTemplate, buildDir);
 
   const defaultPackageJSON = JSON.parse(
     defaultTemplate.files.find((file) => file.name === "package.json")
@@ -59,7 +45,7 @@ export const prepareDefaultRemixConfig = async (projectType: ProjectType) => {
   );
   const packageJSON = deepmerge(defaultPackageJSON, projectPackageJSON);
   await fs.writeFile(
-    join(BUILD_DIR, "package.json"),
+    join(buildDir, "package.json"),
     JSON.stringify(packageJSON, null, 2),
     "utf8",
   );
@@ -73,6 +59,7 @@ const parseFolderAndWriteFiles = async (folder: Folder, path: string) => {
     }
 
     const filePath = join(path, file.name);
+    await ensureFileInPath(filePath);
     await fs.writeFile(filePath, file.content, "utf8");
   }
 
@@ -80,6 +67,35 @@ const parseFolderAndWriteFiles = async (folder: Folder, path: string) => {
     const subFolder = folder.subFolders[j];
     await parseFolderAndWriteFiles(subFolder, join(path, subFolder.name));
   }
+};
+
+export const loadProjectData = async (projectId: string, path: string) => {
+  const config = await checkAuthTokenForProject(projectId);
+  if (!config) {
+    throw new Error("Access token for the project is missing");
+  }
+
+  const { token, host } = config;
+  const webstudioUrl = new URL(host);
+  webstudioUrl.pathname = `/rest/buildId/${projectId}`;
+  webstudioUrl.searchParams.append("authToken", token);
+
+  console.log(`\n Checking latest build for project ${projectId}.`);
+  const buildIdData = await fetchApi(webstudioUrl.href);
+  const { buildId } = buildIdData;
+  if (!buildId) {
+    throw new Error("Project does not published yet");
+  }
+
+  webstudioUrl.pathname = `/rest/build/${buildId}`;
+  console.log(`\n Downloading project data.`);
+
+  const projectData = await fetchApi(webstudioUrl.href);
+
+  await ensureFileInPath(path);
+  await fs.writeFile(path, JSON.stringify(projectData));
+
+  console.log(`\n Project data downloaded to ${path}.`);
 };
 
 export const checkConfig = async () => {
@@ -92,22 +108,25 @@ export const checkConfig = async () => {
   }
 };
 
-export const checkAuth = async (projectId: string): Promise<Auth> => {
+export const checkAuthTokenForProject = async (
+  projectId: string,
+): Promise<Auth> => {
   if (currentTries >= MAX_RETRIES) {
     throw new Error("Too many tries, please login again.");
   }
-  const config: Config = await getConfig();
+
+  const config: Config = await getGlobalConfig();
   const found: Auth = config[projectId];
   if (found == null) {
     console.log(`Credentials not found for project ${projectId}\n`);
-    await login();
+    await link();
     currentTries++;
-    return await checkAuth(projectId);
+    return await checkAuthTokenForProject(projectId);
   }
   return found;
 };
 
-export const getConfig = async () => {
+export const getGlobalConfig = async () => {
   const config = await fs.readFile(GLOBAL_CONFIG_FILE, "utf-8");
   try {
     const json = JSON.parse(config);
@@ -138,4 +157,33 @@ export const fetchApi = async (url: string) => {
     }
   }
   return data;
+};
+
+export const ensureFileInPath = async (filePath: string) => {
+  const dirname = path.dirname(filePath);
+
+  try {
+    await fs.access(dirname, fs.constants.F_OK);
+  } catch (err) {
+    await fs.mkdir(dirname, { recursive: true });
+  }
+
+  try {
+    await fs.access(filePath, fs.constants.F_OK);
+  } catch (err) {
+    await fs.writeFile(filePath, "");
+  }
+};
+
+export const deleteFolderIfExists = async (generatedDir: string) => {
+  try {
+    await fs.rmdir(generatedDir, { recursive: true });
+    console.log("Folder deleted successfully (if it existed).");
+  } catch (err) {
+    if (err.code !== "ENOENT") {
+      return;
+    } else {
+      console.error("Error while deleting the folder:", err);
+    }
+  }
 };

@@ -24,12 +24,12 @@
     "tsx": "^3.12.7"
   },
   "dependencies": {
-    "@webstudio-is/asset-uploader": "^0.75.0",
+    "@webstudio-is/asset-uploader": "^0.82.0",
     "@webstudio-is/eslint-config-custom": "^1.0.6",
-    "@webstudio-is/project-build": "^0.75.0",
-    "@webstudio-is/react-sdk": "^0.75.0",
-    "@webstudio-is/sdk-components-react": "^0.75.0",
-    "@webstudio-is/sdk-components-react-remix": "^0.75.0",
+    "@webstudio-is/project-build": "^0.82.0",
+    "@webstudio-is/react-sdk": "^0.82.0",
+    "@webstudio-is/sdk-components-react": "^0.82.0",
+    "@webstudio-is/sdk-components-react-remix": "^0.82.0",
     "@webstudio-is/tsconfig": "^1.0.6",
     "deepmerge-ts": "^5.1.0",
     "ora": "^6.3.1",

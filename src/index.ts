@@ -1,18 +1,16 @@
 import "zx/globals";
 import { parseArgs } from "node:util";
-import { prepareConfigPath, showHelp } from "./lib.js";
-import { VERSION } from "./constants.js";
-import { ProjectType } from "./types.js";
+import { prepareGlobalConfigPath, showHelp } from "./lib";
+import { VERSION } from "./constants";
+import { ProjectType } from "./types";
 
-import { login } from "./login.js";
-import { sync } from "./sync.js";
-import { build } from "./build.js";
-import { serve } from "./serve.js";
+import { link } from "./link";
+import { sync } from "./sync";
+import { build } from "./build";
 
 const commands = {
-  serve,
   sync,
-  login,
+  link,
   build,
 };
 
@@ -56,7 +54,7 @@ export const main = async () => {
     $.verbose = false;
   }
 
-  await prepareConfigPath();
+  await prepareGlobalConfigPath();
 
   if (args.values.help || args.positionals.length === 0) {
     if (

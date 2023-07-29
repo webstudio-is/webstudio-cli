@@ -1,3 +1,7 @@
+import type { Build, Page } from "@webstudio-is/project-build";
+import type { Params } from "@webstudio-is/react-sdk";
+import type { Asset } from "@webstudio-is/asset-uploader";
+
 export type Config = {
   [projectId: string]: Auth;
 };
@@ -18,6 +22,27 @@ export interface Folder {
   files: File[];
   subFolders: Folder[];
 }
+
+export type ComponentsByPage = {
+  [path: string]: Set<string>;
+};
+
+export type SiteDataByPage = {
+  [path: string]: {
+    page: Page;
+    build: Pick<Build, "props" | "instances" | "dataSources">;
+    assets: Array<Asset>;
+    params?: Params;
+    pages: Array<Page>;
+  };
+};
+
+export type RemixRoutes = {
+  routes: Array<{
+    path: string;
+    file: string;
+  }>;
+};
 
 export enum ProjectType {
   "vercel" = "vercel",
