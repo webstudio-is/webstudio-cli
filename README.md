@@ -1,5 +1,7 @@
 ## Webstudio CLI
 
+Moved to [main repo](https://github.com/webstudio-is/webstudio)
+
 Webstudio CLI lets you download data from a Webstudio instance onto your file system. Webstudio SDK will automatically use it.
 
 ## Installation
